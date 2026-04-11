@@ -190,11 +190,12 @@ function renderCatalog() {
 
             article.className = "snap-center shrink-0 w-56 flex flex-col items-center cursor-pointer group";
             article.innerHTML = `
-                <!-- Imagen flotante -->
-                <div class="relative z-10 w-40 h-40 flex items-end justify-center">
+                <!-- Imagen en círculo flotante -->
+                <div class="relative z-10 w-36 h-36 rounded-full bg-white flex items-center justify-center
+                            shadow-[0_8px_24px_rgba(0,0,0,0.12)] border-4 border-white
+                            group-hover:-translate-y-2 transition-transform duration-300">
                     <img src="${imgSrc}" alt="${product.name}"
-                         class="w-36 h-36 object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,0.25)]
-                                group-hover:-translate-y-2 transition-transform duration-300 pointer-events-none">
+                         class="w-24 h-24 object-contain pointer-events-none">
                 </div>
                 <!-- Card body con color -->
                 <div class="w-full rounded-3xl -mt-14 pt-16 pb-7 px-5 text-center flex flex-col items-center gap-3
