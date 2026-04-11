@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-cream: #f8f0df;
+  --color-brand-cream-strong: #f1e3c2;
+  --color-brand-berry: #b1306b;
+  --color-brand-berry-soft: #d65a87;
+  --color-brand-teal: #2d6680;
+  --color-brand-teal-soft: #70a7ac;
+  --color-brand-wood: #5b3822;
+  --color-brand-wood-soft: #926540;
+  --color-brand-coral: #eb796f;
+
+  --font-display: "Outfit", sans-serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-brand-wood);
+    background:
+        radial-gradient(circle at top left, rgba(214, 90, 135, 0.15), transparent 35%),
+        radial-gradient(circle at top right, rgba(112, 167, 172, 0.15), transparent 30%),
+        linear-gradient(180deg, #fffdf8 0%, var(--color-brand-cream) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* Base custom classes where Tailwind utilities are too long or duplicated heavily */
+@layer components {
+    .glass-panel {
+        @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-lg shadow-brand-wood/5;
+    }
+    
+    .btn-primary {
+        @apply px-6 py-3 rounded-full font-bold text-white bg-gradient-to-br from-brand-berry to-brand-berry-soft shadow-lg shadow-brand-berry/20 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-berry/30 hover:scale-105 active:translate-y-0 transition-all duration-300;
+    }
+
+    .btn-secondary {
+        @apply px-6 py-3 rounded-full font-bold text-white bg-gradient-to-br from-brand-teal to-brand-teal-soft shadow-lg shadow-brand-teal/20 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-teal/30 hover:scale-105 active:translate-y-0 transition-all duration-300;
+    }
+}

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Artesanal | Paletas, Nieves y Café</title>
+    <meta name="description" content="Sistema de pedidos mayorista y ventas para La Artesanal.">
+    <link rel="icon" type="image/png" href="./assets/logo-artesanal.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+          --color-brand-cream: #f8f0df;
+          --color-brand-cream-strong: #f1e3c2;
+          --color-brand-berry: #b1306b;
+          --color-brand-berry-soft: #d65a87;
+          --color-brand-teal: #2d6680;
+          --color-brand-teal-soft: #70a7ac;
+          --color-brand-wood: #5b3822;
+          --color-brand-wood-soft: #926540;
+          --color-brand-coral: #eb796f;
+
+          --font-display: "Outfit", sans-serif;
+          --font-sans: "Inter", sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-sans);
+            color: #111;
+            background: #ffffff;
+            min-height: 100vh;
+        }
+
+        @layer components {
+            .glass-panel {
+                @apply bg-white border-2 border-black;
+            }
+            
+            .btn-primary {
+                @apply px-6 py-3 rounded-xl font-bold text-white bg-black border-2 border-black hover:bg-brand-berry hover:border-brand-berry hover:shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none transition-all duration-200;
+            }
+
+            .btn-secondary {
+                @apply px-6 py-3 rounded-xl font-bold text-black bg-white border-2 border-black hover:shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none transition-all duration-200;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-black selection:text-white pb-24 md:pb-16 relative overflow-x-hidden w-full m-0 p-0">
+    <div class="max-w-[1240px] w-full mx-auto px-4 sm:px-6 pt-3 space-y-10 md:space-y-16">
+        
+        <!-- Top Navbar (Desktop focused) -->
+        <header class="sticky top-2 z-40 rounded-2xl glass-panel px-4 py-3 md:py-2 flex items-center justify-between transition-all bg-white relative">
+            <div class="hidden md:flex items-center w-auto">
+                <a href="#inicio" class="flex items-center group">
+                    <!-- Logo mas grande -->
+                    <img src="./assets/logo-artesanal.png" alt="Logo de La Artesanal" class="w-16 h-16 md:w-24 md:h-24 rounded-full border-2 border-black hover:scale-105 transition-transform bg-white -my-4 md:-my-6 relative z-10 shadow-sm">
+                </a>
+            </div>
+
+            <!-- Desktop Nav -->
+            <nav id="main-nav" class="hidden md:flex flex-1 justify-center gap-2 text-center md:text-left">
+                <!-- Search Input unificado -->
+                <div class="relative w-full md:max-w-xs mb-4 md:mb-0 md:justify-self-end md:ml-auto md:mr-4">
+                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                     <input type="search" id="search-input" placeholder="Buscar producto..." class="w-full pl-10 pr-4 py-2.5 md:py-2 rounded-xl border-2 border-black bg-white focus:outline-none focus:ring-0 focus:border-brand-berry transition-all text-sm font-medium">
+                </div>
+                
+                <a href="#inicio" class="px-3 py-2 rounded-xl text-black font-bold hover:bg-gray-100 border-2 border-transparent hover:border-black transition-colors text-sm">Inicio</a>
+                <a href="#catalogo" class="px-3 py-2 rounded-xl text-black font-bold hover:bg-gray-100 border-2 border-transparent hover:border-black transition-colors text-sm">Catálogo</a>
+                <a href="#novedades" class="px-3 py-2 rounded-xl text-black font-bold hover:bg-gray-100 border-2 border-transparent hover:border-black transition-colors text-sm">Novedades</a>
+                <!-- Injected dynamic links will go here -->
+            </nav>
+
+            <div class="hidden md:flex gap-3 ml-auto" id="main-actions">
+                <button id="open-auth" class="btn-primary !py-2 !px-5 text-sm">Entrar</button>
+            </div>
+            
+            <!-- Mobile Search Bar (only visible on small screens to replace the desktop one) -->
+            <div class="flex md:hidden relative w-full mb-1">
+                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                 <input type="search" id="mobile-search-input" placeholder="Buscar producto..." class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-black bg-white focus:outline-none focus:ring-0 focus:border-brand-berry shadow-[4px_4px_0_#111] transition-all text-base font-medium">
+            </div>
+        </header>
+
+
+            <!-- Hidden nodes for JS state -->
+            <div style="display: none;" aria-hidden="true">
+                 <strong id="current-profile-label">Publico</strong>
+                 <div id="session-status"></div>
+            </div>
+        </header>
+
+        <main class="space-y-16 lg:space-y-24">
+            
+            <!-- Hero -->
+            <section class="flex flex-col items-center text-center" id="inicio">
+                <img src="./assets/logo-artesanal.png" alt="Logo de La Artesanal" class="w-44 h-44 mx-auto block md:hidden rounded-full border-4 border-black mb-6 shadow-[4px_4px_0_#111] object-cover bg-white">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-black text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-sm border-2 border-white">¡AQUÍ SÍ ES NIEVE ARTESANAL!</span>
+                    
+                <div class="relative w-full max-w-3xl">
+                    <img src="./img/pajaritol.png" alt="Ave decorativa" class="absolute -top-6 md:-top-12 -left-4 md:-left-12 w-16 md:w-24 drop-shadow-[0_0_10px_rgba(255,255,255,1)] z-20 -rotate-12 hover:-translate-y-2 hover:rotate-0 transition-transform cursor-pointer">
+                    <img src="./img/pajarito-r.png" alt="Ave decorativa" class="absolute -top-8 md:-top-10 -right-2 md:-right-4 w-16 md:w-24 drop-shadow-[0_0_10px_rgba(255,255,255,1)] z-20 rotate-12 hover:-translate-y-2 hover:rotate-0 transition-transform cursor-pointer">
+                    
+                    <h1 class="relative z-10 font-display text-5xl md:text-8xl font-black text-black leading-none mb-6">
+                        Hecha a mano,<br> <span class="text-brand-berry italic drop-shadow-md">como debe ser.</span>
+                    </h1>
+                </div>
+                <p class="text-gray-700 text-lg md:text-2xl mb-8 leading-relaxed max-w-2xl font-medium">
+                    Refrescantes paletas y nieves creadas con recetas tradicionales. 
+                    En Huasca de Ocampo y para eventos en toda la región.
+                </p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#catalogo" class="btn-primary text-center">Explorar Catálogo</a>
+                    <a href="#contacto" class="btn-secondary text-center">Cotizar para evento</a>
+                </div>
+            </section>
+
+            <!-- Promo Video -->
+            <section class="rounded-3xl border-2 border-black shadow-[8px_8px_0_#111] bg-black relative group w-full overflow-hidden flex justify-center" id="promo-video">
+                <video 
+                    src="./video/video.mp4" 
+                    class="w-full h-auto max-h-[80vh] object-contain opacity-95 group-hover:opacity-100 transition-opacity duration-300" 
+                    autoplay 
+                    loop 
+                    muted 
+                    playsinline></video>
+            </section>
+
+            <!-- Catalog -->
+            <section id="catalogo" class="scroll-mt-24">
+                <div class="flex flex-col items-center mb-10 text-center">
+                    <h2 class="font-display text-4xl md:text-5xl font-black text-black">Cátalogo</h2>
+                    <div class="w-24 h-2 bg-black mt-4"></div>
+                </div>
+
+                <div class="flex flex-wrap gap-3 mb-6 justify-center" id="category-filters"></div>
+                <div class="text-gray-600 font-bold text-sm mb-4 text-center" id="catalog-summary"></div>
+                
+                <!-- Netflix-style Container -->
+                <div class="flex flex-col gap-12" id="catalog-container"></div>
+            </section>
+
+
+            <!-- Feed de Novedades -->
+            <section id="novedades" class="scroll-mt-24">
+                <div class="flex flex-col items-center mb-10 text-center">
+                    <h2 class="font-display text-4xl md:text-5xl font-black text-black">Novedades</h2>
+                    <div class="w-24 h-2 bg-black mt-4"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Tarjeta 1 -->
+                    <article class="bg-white border-2 border-black rounded-2xl shadow-[6px_6px_0_#111] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_var(--color-brand-berry)] transition-all flex flex-col cursor-pointer">
+                        <img src="./assets/paleta_fresa.png" alt="Paleta de Fresa" class="w-full h-64 object-cover border-b-2 border-black">
+                        <div class="p-6 flex-1 flex flex-col">
+                            <span class="text-xs font-bold uppercase tracking-widest text-black mb-2 border-2 border-black px-2 py-1 bg-white w-fit">Temporada</span>
+                            <h3 class="font-display text-2xl font-black text-black mb-3 leading-tight">La Fresa Perfecta</h3>
+                            <p class="text-gray-700 font-medium text-sm leading-relaxed mb-4">Nueva cosecha de fresas michoacanas molidas artesanalmente para nuestro clásico sabor rojo.</p>
+                            <span class="text-gray-500 font-bold text-xs mt-auto">Hace 2 días</span>
+                        </div>
+                    </article>
+
+                    <!-- Tarjeta 2 -->
+                    <article class="bg-white border-2 border-black rounded-2xl shadow-[6px_6px_0_#111] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_var(--color-brand-teal)] transition-all flex flex-col cursor-pointer">
+                        <img src="./assets/paleta_mango.png" alt="Paleta de Mango" class="w-full h-64 object-cover border-b-2 border-black">
+                        <div class="p-6 flex-1 flex flex-col">
+                            <span class="text-xs font-bold uppercase tracking-widest text-black mb-2 border-2 border-black px-2 py-1 bg-white w-fit">Receta</span>
+                            <h3 class="font-display text-2xl font-black text-black mb-3 leading-tight">Mango con toque único</h3>
+                            <p class="text-gray-700 font-medium text-sm leading-relaxed mb-4">El rey del calor aterrizó; un estallido de color amarillo vibrante en cada bocado.</p>
+                            <span class="text-gray-500 font-bold text-xs mt-auto">Hace 1 semana</span>
+                        </div>
+                    </article>
+
+                    <!-- Tarjeta 3 -->
+                    <article class="bg-white border-2 border-black rounded-2xl shadow-[6px_6px_0_#111] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_var(--color-brand-coral)] transition-all flex flex-col cursor-pointer">
+                        <img src="./assets/carrito_evento.png" alt="Carrito de Eventos" class="w-full h-64 object-cover border-b-2 border-black">
+                        <div class="p-6 flex-1 flex flex-col">
+                            <span class="text-xs font-bold uppercase tracking-widest text-black mb-2 border-2 border-black px-2 py-1 bg-white w-fit">Noticia</span>
+                            <h3 class="font-display text-2xl font-black text-black mb-3 leading-tight">Llevamos el carrito</h3>
+                            <p class="text-gray-700 font-medium text-sm leading-relaxed mb-4">Estuvimos refrescando el verano con nuestro estante minimalista corporativo. ¡Pídelo!</p>
+                            <span class="text-gray-500 font-bold text-xs mt-auto">Hace 1 mes</span>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Hidden cart nodes for JS (carrito oculto sin UI) -->
+            <div class="hidden" aria-hidden="true">
+                <div id="cart-list"></div>
+                <strong id="cart-total">MX$0</strong>
+                <button id="clear-cart"></button>
+                <form id="order-form"><input name="customer_name"><input name="phone"><input name="email"><select name="commercial_profile" id="order-profile"></select><textarea name="notes"></textarea></form>
+            </div>
+
+            <!-- Dashboard (hidden, only rendered for admin via JS) -->
+            <div id="admin" class="hidden"></div>
+            <div id="metrics-grid" class="hidden"></div>
+            <div id="pending-orders" class="hidden"></div>
+            <div id="operations-map" class="hidden"></div>
+            <canvas id="sales-chart" class="hidden"></canvas>
+
+            <!-- Contacto -->
+            <section id="contacto" class="scroll-mt-24 bg-white border-2 border-black text-black rounded-3xl p-8 md:p-12 shadow-[6px_6px_0_#111]">
+                <div class="md:grid md:grid-cols-2 gap-12 items-start">
+                    <!-- Info + WhatsApp -->
+                    <div>
+                        <p class="text-black font-bold uppercase tracking-widest text-xs mb-3 border-2 border-black inline-block px-3 py-1 bg-white">Hablemos</p>
+                        <h2 class="font-display text-3xl md:text-5xl font-black mb-6">Contáctanos</h2>
+                        <p class="text-gray-700 mb-8 max-w-md font-medium">¿Buscas distribución, abrir un punto de venta o cotizar para un evento? Estamos en Huasca de Ocampo.</p>
+                        
+                        <div class="space-y-4 font-bold text-black border-l-4 border-brand-berry pl-4 mb-8">
+                            <p id="brand-contact-name" class="font-display text-2xl"></p>
+                            <p id="brand-contact-phone" class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-black"></i> <span></span></p>
+                            <p id="brand-contact-email" class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-black"></i> <span></span></p>
+                            <p id="brand-contact-address" class="flex items-start gap-3"><i data-lucide="map-pin" class="w-5 h-5 text-black shrink-0 mt-0.5"></i> <span class="max-w-[250px]"></span></p>
+                        </div>
+
+                        <!-- Horarios -->
+                        <div class="mb-8 mt-6">
+                            <p class="flex items-center gap-2 font-bold text-xs uppercase tracking-widest text-black mb-3">
+                                <i data-lucide="clock" class="w-4 h-4 text-brand-berry"></i> Horarios de Atención
+                            </p>
+                            <div id="contact-hours" class="rounded-xl border-2 border-black bg-white/80 px-4 py-2 divide-y divide-black/10 text-black shadow-[3px_3px_0_#111]"></div>
+                        </div>
+
+                        <a href="#" id="whatsapp-link" class="px-6 py-3 rounded-xl font-bold text-white bg-black border-2 border-black hover:bg-[#25D366] hover:border-[#25D366] hover:shadow-[4px_4px_0_#111] transition-all flex items-center justify-center gap-2 w-fit">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i> Escribir por WhatsApp
+                        </a>
+                    </div>
+
+                    <!-- Mapa Leaflet de Huasca de Ocampo -->
+                    <div class="mt-8 md:mt-0 rounded-2xl overflow-hidden border-2 border-black shadow-[4px_4px_0_#111] h-80 md:h-full min-h-[320px]">
+                        <div id="contact-map" class="w-full h-full"></div>
+                    </div>
+                </div>
+
+                <!-- Formulario de contacto oculto, usado por JS -->
+                <form id="contact-form" class="hidden" aria-hidden="true">
+                    <input type="text" name="name">
+                    <input type="text" name="business_name">
+                    <input type="email" name="email">
+                    <textarea name="message"></textarea>
+                </form>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 pb-4 border-t-2 border-black">
+                <p class="text-gray-600 font-bold text-sm">© 2026 La Artesanal. Hecho a mano.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-black hover:bg-black hover:text-white hover:-translate-y-1 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-black hover:bg-black hover:text-white hover:-translate-y-1 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                    </a>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="fixed inset-x-0 bottom-0 bg-white border-t-2 border-black z-[9999] md:hidden flex justify-around items-center pt-3 px-2 pb-6 w-full shadow-[0px_-2px_10px_rgba(0,0,0,0.1)]" id="mobile-bottom-nav">
+        <a href="#inicio" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors w-full">
+            <i data-lucide="home" class="w-6 h-6 mb-1 mx-auto"></i>
+            <span class="text-[10px] font-bold text-center block">Inicio</span>
+        </a>
+        <a href="#catalogo" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors w-full">
+            <i data-lucide="ice-cream" class="w-6 h-6 mb-1 mx-auto"></i>
+            <span class="text-[10px] font-bold text-center block">Catálogo</span>
+        </a>
+        
+        <!-- Dynamic Mobile Actions (Cart, Profile, Admin) get injected here -->
+        <div id="mobile-dynamic-actions" class="flex justify-around items-center contents"></div>
+        
+        <button id="mobile-open-auth" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors w-full outline-none">
+            <i data-lucide="user-circle" class="w-6 h-6 mb-1 mx-auto"></i>
+            <span class="text-[10px] font-bold text-center block">Entrar</span>
+        </button>
+    </nav>
+
+    <!-- Product Detail Modal -->
+    <dialog id="product-modal" class="backdrop:bg-black/60 backdrop:backdrop-blur-sm bg-transparent border-none p-4 max-w-full m-auto w-full md:w-[640px] shadow-2xl">
+        <div class="bg-white rounded-3xl border-2 border-black shadow-[8px_8px_0_#111] overflow-hidden relative">
+            <button id="close-product-modal" class="absolute top-4 right-4 z-20 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-black text-lg hover:bg-brand-berry transition-colors">✕</button>
+            <img id="modal-product-img" src="" alt="" class="w-full h-56 md:h-72 object-cover border-b-2 border-black">
+            <div class="p-6 md:p-8">
+                <span id="modal-product-category" class="inline-block px-3 py-1 text-xs font-black uppercase tracking-wider border-2 border-black bg-white mb-3"></span>
+                <h2 id="modal-product-name" class="font-display text-3xl md:text-4xl font-black text-black mb-3 leading-tight"></h2>
+                <p id="modal-product-desc" class="text-gray-700 font-medium leading-relaxed mb-6"></p>
+                <div class="flex items-center justify-between pt-4 border-t-2 border-black">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Presentación</p>
+                        <p id="modal-product-unit" class="font-black text-black text-lg"></p>
+                    </div>
+                    <div class="text-right">
+                        <p id="modal-price-label" class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Precio</p>
+                        <p id="modal-product-price" class="font-display text-4xl font-black text-brand-berry"></p>
+                    </div>
+                </div>
+                <button id="modal-add-cart" class="mt-6 w-full bg-black text-white font-black py-4 rounded-2xl text-lg border-2 border-black hover:bg-brand-berry hover:border-brand-berry hover:shadow-[4px_4px_0_#111] transition-all">Agregar al Carrito 🛒</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Auth Modal -->
+    <dialog id="auth-dialog" class="backdrop:bg-brand-wood/50 backdrop:backdrop-blur-sm bg-transparent border-none p-4 max-w-full m-auto w-full md:w-[900px] shadow-2xl">
+        <form method="dialog" id="auth-panel" class="bg-gradient-to-b from-white to-brand-cream-strong/30 rounded-[2.5rem] p-6 md:p-10 border border-white shadow-2xl w-full relative mx-auto">
+            <button type="submit" class="absolute top-6 right-6 w-10 h-10 bg-black/5 hover:bg-black/10 rounded-full flex items-center justify-center transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-brand-wood"></i>
+            </button>
+            
+            <div class="flex items-center gap-4 mb-8">
+                <img src="./assets/logo-artesanal.png" alt="Logo" class="w-16 h-16 rounded-full shadow-md border-2 border-white">
+                <div>
+                     <h2 class="font-display text-2xl font-bold text-brand-wood">Acceso Seguro</h2>
+                     <p class="text-brand-wood-soft text-sm">Inicia sesión para gestionar permisos o ver precios especiales.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white/80 p-6 rounded-3xl border border-brand-wood/5">
+                    <h3 class="font-bold text-lg mb-4">Ingresar a tu Perfil</h3>
+                    <div class="space-y-4">
+                        <input type="email" id="login-email" placeholder="Correo electrónico" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-brand-wood/10 focus:border-brand-berry focus:ring-1 focus:ring-brand-berry/30 text-sm">
+                        <input type="password" id="login-password" placeholder="Contraseña" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-brand-wood/10 focus:border-brand-berry focus:ring-1 focus:ring-brand-berry/30 text-sm">
+                        <button type="button" id="login-button" class="btn-primary w-full !py-3">Entrar Seguramente</button>
+                        
+                        <div class="py-2 flex items-center gap-2">
+                            <hr class="flex-1 border-brand-wood/10">
+                            <span class="text-brand-wood-soft text-xs">O</span>
+                            <hr class="flex-1 border-brand-wood/10">
+                        </div>
+                        
+                        <button type="button" id="google-button" class="px-6 py-3 rounded-full font-bold w-full flex justify-center gap-2 items-center bg-white text-brand-wood border-brand-wood/20 border shadow-sm hover:bg-brand-cream/50 transition-all text-sm">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                            Acceder con Google
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white/80 p-6 rounded-3xl border border-brand-wood/5">
+                    <h3 class="font-bold text-lg mb-4">Solicitar Alta</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="signup-name" placeholder="Tu nombre" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-brand-wood/10 focus:border-brand-teal focus:ring-1 focus:ring-brand-teal/30 text-sm">
+                        <input type="email" id="signup-email" placeholder="Correo electrónico" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-brand-wood/10 focus:border-brand-teal focus:ring-1 focus:ring-brand-teal/30 text-sm">
+                        <input type="password" id="signup-password" placeholder="Clave nueva" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-brand-wood/10 focus:border-brand-teal focus:ring-1 focus:ring-brand-teal/30 text-sm">
+                        <select id="signup-profile" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-brand-wood/10 focus:border-brand-teal focus:ring-1 focus:ring-brand-teal/30 appearance-none text-sm">
+                            <option value="minorista">Cuenta Menudeo</option>
+                            <option value="mayorista">Cuenta Mayorista</option>
+                        </select>
+                        <button type="button" id="signup-button" class="btn-secondary w-full !py-3">Abrir Cuenta</button>
+                    </div>
+                </div>
+            </div>
+            <p id="auth-feedback" class="mt-6 text-center text-sm font-semibold text-brand-berry"></p>
+        </form>
+    </dialog>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
