@@ -168,58 +168,62 @@ function renderCatalog() {
 
         const track = rowSection.querySelector("div:nth-of-type(2)");
 
-        // Color de acento por categoría
-        const categoryAccent = {
-            "Favoritos":        "#b1306b",
-            "Sabores de Agua":  "#2d6680",
-            "Helados de Crema": "#c07a3e",
-            "Licor":            "#7c4fa0",
+        const categoryColors = {
+            "Favoritos":        { bg: "#b1306b", shadow: "rgba(177,48,107,0.35)"  },
+            "Sabores de Agua":  { bg: "#2d6680", shadow: "rgba(45,102,128,0.35)"  },
+            "Helados de Crema": { bg: "#c07a3e", shadow: "rgba(192,122,62,0.35)"  },
+            "Licor":            { bg: "#7c4fa0", shadow: "rgba(124,79,160,0.35)"  },
         };
 
         catProducts.forEach(product => {
             const visiblePrice = getVisiblePrice(product);
-            const accent = categoryAccent[product.category] || "#b1306b";
+            const col = categoryColors[product.category] || categoryColors["Favoritos"];
             const article = document.createElement("article");
 
             let imgSrc = "./assets/paleta_fresa.png";
-            if (product.category === "Sabores de Agua")   imgSrc = "./assets/paleta_mango.png";
+            if (product.category === "Sabores de Agua") imgSrc = "./assets/paleta_mango.png";
             if (["Helados de Crema","Favoritos"].includes(product.category)) imgSrc = "./assets/bolita_nieve.png";
 
             const priceHtml = visiblePrice === null
-                ? `<p class="text-xs italic" style="color:${accent}80">Inicia sesión para ver precio</p>`
-                : `<p class="font-display text-xl font-black" style="color:${accent}">${formatCurrency(visiblePrice)}</p>`;
+                ? `<p class="text-white/60 text-xs italic font-medium">Inicia sesión para ver precio</p>`
+                : `<p class="font-display text-2xl font-black text-white">${formatCurrency(visiblePrice)}</p>`;
 
-            article.className = "snap-center shrink-0 w-52 flex flex-col items-center text-center cursor-pointer group";
+            article.className = "snap-center shrink-0 w-56 flex flex-col items-center cursor-pointer group";
             article.innerHTML = `
-                <!-- Caja imagen blanca redondeada -->
-                <div class="w-full aspect-square rounded-3xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]
-                            flex items-center justify-center mb-4 overflow-hidden
-                            group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.13)] transition-shadow duration-300">
+                <!-- Imagen flotante -->
+                <div class="relative z-10 w-40 h-40 flex items-end justify-center">
                     <img src="${imgSrc}" alt="${product.name}"
-                         class="w-4/5 h-4/5 object-contain
-                                group-hover:scale-105 transition-transform duration-300 pointer-events-none">
+                         class="w-36 h-36 object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,0.25)]
+                                group-hover:-translate-y-2 transition-transform duration-300 pointer-events-none">
                 </div>
-                <!-- Texto debajo -->
-                <p class="text-[10px] font-black uppercase tracking-widest mb-1" style="color:${accent}">${product.category}</p>
-                <h4 class="font-display text-base font-black text-gray-900 leading-tight mb-2">${product.name}</h4>
-                <p class="text-gray-400 text-xs leading-relaxed line-clamp-2 mb-3">${product.description}</p>
-                ${priceHtml}
-                <!-- Flecha -->
-                <button type="button"
-                        class="mt-3 flex items-center gap-1 text-xs font-bold hover:gap-2 transition-all"
-                        style="color:${accent}" aria-label="Ver producto">
-                    Ver más
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2.5"
-                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
+                <!-- Card body con color -->
+                <div class="w-full rounded-3xl -mt-14 pt-16 pb-7 px-5 text-center flex flex-col items-center gap-3
+                            transition-all duration-300 group-hover:-translate-y-1"
+                     style="background:${col.bg}; box-shadow: 0 8px 24px ${col.shadow}">
+                    <h4 class="font-display text-lg font-black text-white uppercase tracking-wide leading-tight">${product.name}</h4>
+                    <div class="flex gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+                    </div>
+                    <p class="text-white/80 text-xs font-medium leading-relaxed line-clamp-3">${product.description}</p>
+                    ${priceHtml}
+                    <button type="button"
+                            class="mt-1 w-10 h-10 bg-white rounded-full flex items-center justify-center
+                                   shadow-md hover:scale-110 active:scale-95 transition-transform"
+                            style="color:${col.bg}" aria-label="Agregar al carrito">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
             `;
 
             article.querySelector("button").addEventListener("click", (e) => {
                 e.stopPropagation();
-                openProductModal(product);
+                addToCart(product.id);
             });
             article.addEventListener("click", () => openProductModal(product));
             track.appendChild(article);
