@@ -186,23 +186,23 @@ function renderCatalog() {
 
             // Fotos públicas Unsplash — solo maqueta
             const MOCK_IMGS = {
-                1:  "https://images.unsplash.com/photo-1488900128323-21503983a07e?w=300&h=300&fit=crop&auto=format", // paleta fresa
-                2:  "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=300&h=300&fit=crop&auto=format", // paleta oreo
-                3:  "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=300&h=300&fit=crop&auto=format", // berry
-                4:  "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&h=300&fit=crop&auto=format", // rosa
-                5:  "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=300&h=300&fit=crop&auto=format", // mango
-                6:  "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=300&h=300&fit=crop&auto=format", // maracuya
-                7:  "https://images.unsplash.com/photo-1629385701021-fec4e4f73f87?w=300&h=300&fit=crop&auto=format", // limon
-                8:  "https://images.unsplash.com/photo-1519735777090-ec97162dc266?w=300&h=300&fit=crop&auto=format", // guanabana
-                9:  "https://images.unsplash.com/photo-1580915411954-282cb3fc8b5f?w=300&h=300&fit=crop&auto=format", // leche
-                10: "https://images.unsplash.com/photo-1559703248-dcaaec9fab78?w=300&h=300&fit=crop&auto=format", // mazapan
-                11: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=300&h=300&fit=crop&auto=format", // cajeta
-                12: "https://images.unsplash.com/photo-1516559828984-686a0a76f153?w=300&h=300&fit=crop&auto=format", // mamey
+                1:  "https://images.unsplash.com/photo-1488900128323-21503983a07e?w=300&h=300&fit=crop&auto=format", // paletas mora/vino
+                2:  "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=300&h=300&fit=crop&auto=format", // cono creme
+                3:  "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&h=300&fit=crop&auto=format", // scoops rosas — zarzamora
+                4:  "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=300&h=300&fit=crop&auto=format", // crema dulce — beso de ángel
+                5:  "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=300&h=300&fit=crop&auto=format", // cono mango naranja
+                6:  "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=300&h=300&fit=crop&auto=format", // scoops coloridos — maracuyá
+                7:  "https://images.unsplash.com/photo-1560008581-09826d1de69e?w=300&h=300&fit=crop&auto=format", // limón cítrico
+                8:  "https://images.unsplash.com/photo-1580915411954-282cb3fc8b5f?w=300&h=300&fit=crop&auto=format", // crema blanca — guanábana
+                9:  "https://images.unsplash.com/photo-1557142046-c704a3adf364?w=300&h=300&fit=crop&auto=format", // helado leche vainilla
+                10: "https://images.unsplash.com/photo-1559703248-dcaaec9fab78?w=300&h=300&fit=crop&auto=format", // cacahuate/mazapán
+                11: "https://images.unsplash.com/photo-1608228088998-57828365d486?w=300&h=300&fit=crop&auto=format", // cajeta caramelo
+                12: "https://images.unsplash.com/photo-1516559828984-686a0a76f153?w=300&h=300&fit=crop&auto=format", // mamey rosado
                 13: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=300&h=300&fit=crop&auto=format", // coco
-                14: "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=300&h=300&fit=crop&auto=format", // chocolate
-                15: "https://images.unsplash.com/photo-1600718374662-0483d2b9da44?w=300&h=300&fit=crop&auto=format", // pistache
-                16: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=300&h=300&fit=crop&auto=format", // coco piña ron
-                17: "https://images.unsplash.com/photo-1506459225024-1428097a7e18?w=300&h=300&fit=crop&auto=format", // vino tinto frutos
+                14: "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=300&h=300&fit=crop&auto=format", // chocolate oscuro
+                15: "https://images.unsplash.com/photo-1600718374662-0483d2b9da44?w=300&h=300&fit=crop&auto=format", // pistache verde
+                16: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=300&h=300&fit=crop&auto=format", // tropical piña
+                17: "https://images.unsplash.com/photo-1506459225024-1428097a7e18?w=300&h=300&fit=crop&auto=format", // frutos rojos vino
             };
             const imgSrc = MOCK_IMGS[product.id] || IMGS.paletaFresa;
 
@@ -217,7 +217,7 @@ function renderCatalog() {
                             overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.12)] border-4 border-white
                             group-hover:-translate-y-2 transition-transform duration-300">
                     <img src="${imgSrc}" alt="${product.name}"
-                         class="w-32 h-32 object-contain pointer-events-none">
+                         class="w-full h-full object-cover pointer-events-none">
                 </div>
                 <!-- Card body pastel -->
                 <div class="w-full rounded-3xl -mt-14 pt-16 pb-7 px-5 text-center flex flex-col items-center gap-3
@@ -285,15 +285,14 @@ function openProductModal(product) {
     document.getElementById("modal-product-img").src = imgSrc;
     document.getElementById("modal-product-img").alt = product.name;
 
-    // Watermark on modal image
-    const modalImgWrapper = document.getElementById("modal-product-img").parentElement;
+    // Watermark superpuesto sobre la foto del modal
+    const modalImgWrapper = document.getElementById("modal-img-wrapper");
     const existingWM = modalImgWrapper.querySelector(".modal-watermark");
     if (existingWM) existingWM.remove();
     const wm = document.createElement("img");
     wm.src = IMGS.logo;
-    wm.className = "modal-watermark absolute bottom-3 right-3 w-12 h-12 rounded-full opacity-50 border-2 border-white/70 pointer-events-none select-none";
+    wm.className = "modal-watermark absolute bottom-3 right-3 w-14 h-14 rounded-full opacity-70 border-2 border-white shadow-lg pointer-events-none select-none";
     wm.setAttribute("aria-hidden", "true");
-    modalImgWrapper.style.position = "relative";
     modalImgWrapper.appendChild(wm);
     document.getElementById("modal-product-category").textContent = product.category;
     document.getElementById("modal-product-name").textContent = product.name;
