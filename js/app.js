@@ -192,7 +192,7 @@ function renderCatalog() {
             article.innerHTML = `
                 <!-- Imagen en círculo flotante -->
                 <div class="relative z-10 w-36 h-36 rounded-full bg-white flex items-center justify-center
-                            shadow-[0_8px_24px_rgba(0,0,0,0.12)] border-4 border-white
+                            overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.12)] border-4 border-white
                             group-hover:-translate-y-2 transition-transform duration-300">
                     <img src="${imgSrc}" alt="${product.name}"
                          class="w-32 h-32 object-contain pointer-events-none">
