@@ -10,6 +10,15 @@ export const IMGS = {
     carritoEvento:CDN_IMG + "carrito_evento.png",
     pajaroL:      CDN_IMG + "pajaritol.png",
     pajaroR:      CDN_IMG + "pajarito-r.png",
+    // Helados y paletas individuales
+    heladoCoco:   CDN_IMG + "helado-coco.png",
+    heladoLeche:  CDN_IMG + "helado-leche.png",
+    heladoMamey:  CDN_IMG + "helado-mamey.png",
+    heladoMazapan:CDN_IMG + "helado-mazapan.png",
+    paletaCoco:   CDN_IMG + "paleta-coco.png",
+    paletaLeche:  CDN_IMG + "paleta-leche.png",
+    paletaMamey:  CDN_IMG + "paleta-mamey.png",
+    paletaMazapan:CDN_IMG + "paleta-mazapan.png",
 };
 
 export const VIDEOS = {

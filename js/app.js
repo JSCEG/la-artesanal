@@ -184,9 +184,13 @@ function renderCatalog() {
             const col = categoryColors[product.category] || categoryColors["Favoritos"];
             const article = document.createElement("article");
 
-            let imgSrc = IMGS.paletaFresa;
-            if (product.category === "Sabores de Agua") imgSrc = IMGS.paletaMango;
-            if (["Helados de Crema","Favoritos"].includes(product.category)) imgSrc = IMGS.boliNieve;
+            const poolAgua   = [IMGS.paletaCoco, IMGS.paletaLeche, IMGS.paletaMamey, IMGS.paletaMazapan, IMGS.paletaFresa, IMGS.paletaMango];
+            const poolCrema  = [IMGS.heladoCoco, IMGS.heladoLeche, IMGS.heladoMamey, IMGS.heladoMazapan, IMGS.boliNieve];
+            const poolGeneral= [...poolAgua, ...poolCrema];
+            let imgSrc;
+            if (product.category === "Sabores de Agua") imgSrc = poolAgua[product.id % poolAgua.length];
+            else if (["Helados de Crema"].includes(product.category)) imgSrc = poolCrema[product.id % poolCrema.length];
+            else imgSrc = poolGeneral[product.id % poolGeneral.length];
 
             const priceHtml = visiblePrice === null
                 ? `<p class="text-gray-400 text-xs italic font-medium">Inicia sesión para ver precio</p>`
@@ -243,9 +247,13 @@ function openProductModal(product) {
     const modal = document.getElementById("product-modal");
     if (!modal) return;
 
-    let imgSrc = IMGS.paletaFresa;
-    if (product.category === "Sabores de Agua") imgSrc = IMGS.paletaMango;
-    if (product.category === "Helados de Crema" || product.category === "Favoritos") imgSrc = IMGS.boliNieve;
+    const poolAgua   = [IMGS.paletaCoco, IMGS.paletaLeche, IMGS.paletaMamey, IMGS.paletaMazapan, IMGS.paletaFresa, IMGS.paletaMango];
+    const poolCrema  = [IMGS.heladoCoco, IMGS.heladoLeche, IMGS.heladoMamey, IMGS.heladoMazapan, IMGS.boliNieve];
+    const poolGeneral= [...poolAgua, ...poolCrema];
+    let imgSrc;
+    if (product.category === "Sabores de Agua") imgSrc = poolAgua[product.id % poolAgua.length];
+    else if (product.category === "Helados de Crema") imgSrc = poolCrema[product.id % poolCrema.length];
+    else imgSrc = poolGeneral[product.id % poolGeneral.length];
 
     document.getElementById("modal-product-img").src = imgSrc;
     document.getElementById("modal-product-img").alt = product.name;
