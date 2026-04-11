@@ -44,9 +44,13 @@
         }
 
         @layer components {
-            /* Navbar glass cálido */
+            /* Navbar glass gris cálido con tinte marca */
             .glass-panel {
-                @apply bg-brand-cream/80 backdrop-blur-xl border-2 border-brand-cream-strong shadow-md shadow-brand-wood/10;
+                background: rgba(245, 243, 246, 0.92);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(177, 48, 107, 0.08);
+                box-shadow: 0 4px 24px rgba(177, 48, 107, 0.06), 0 1px 4px rgba(0,0,0,0.05);
             }
 
             /* CTA principal — berry */
