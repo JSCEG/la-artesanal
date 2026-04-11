@@ -315,10 +315,10 @@
 
     <!-- Product Detail Modal -->
     <dialog id="product-modal" class="backdrop:bg-black/60 backdrop:backdrop-blur-sm bg-transparent border-none p-4 max-w-full m-auto w-full md:w-[640px] shadow-2xl">
-        <div class="bg-white rounded-3xl border-2 border-brand-berry/20 shadow-[8px_8px_0_rgba(177,48,107,0.2)] overflow-hidden relative">
+        <div class="bg-gray-50 rounded-3xl border-2 border-brand-berry/20 shadow-[8px_8px_0_rgba(177,48,107,0.2)] overflow-hidden relative">
             <button id="close-product-modal" class="absolute top-4 right-4 z-20 w-10 h-10 bg-brand-berry text-white rounded-full flex items-center justify-center font-black text-lg hover:bg-brand-berry-soft transition-colors shadow-md">✕</button>
             <img id="modal-product-img" src="" alt="" class="w-full h-56 md:h-72 object-cover border-b-2 border-brand-berry/15">
-            <div class="p-6 md:p-8">
+            <div class="p-6 md:p-8 bg-gray-50">
                 <span id="modal-product-category" class="inline-block px-3 py-1 text-xs font-black uppercase tracking-wider border-2 border-brand-berry/30 bg-brand-berry/5 text-brand-berry mb-3 rounded-full"></span>
                 <h2 id="modal-product-name" class="font-display text-3xl md:text-4xl font-black text-gray-900 mb-3 leading-tight"></h2>
                 <p id="modal-product-desc" class="text-gray-600 font-medium leading-relaxed mb-6"></p>
@@ -343,7 +343,7 @@
 
     <!-- Auth Modal -->
     <dialog id="auth-dialog" class="backdrop:bg-black/50 backdrop:backdrop-blur-sm bg-transparent border-none p-4 max-w-full m-auto w-full md:w-[900px] shadow-2xl">
-        <form method="dialog" id="auth-panel" class="bg-white rounded-[2.5rem] p-6 md:p-10 border border-gray-100 shadow-2xl w-full relative mx-auto">
+        <form method="dialog" id="auth-panel" class="bg-gray-50 rounded-[2.5rem] p-6 md:p-10 border border-gray-100 shadow-2xl w-full relative mx-auto">
             <button type="submit" class="absolute top-6 right-6 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
                 <i data-lucide="x" class="w-5 h-5 text-gray-500"></i>
             </button>
@@ -357,7 +357,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div class="bg-white p-6 rounded-3xl border border-gray-100">
                     <h3 class="font-bold text-lg mb-4 text-gray-900">Ingresar a tu Perfil</h3>
                     <div class="space-y-4">
                         <input type="email" id="login-email" placeholder="Correo electrónico" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-gray-200 focus:border-brand-berry focus:ring-1 focus:ring-brand-berry/30 text-sm text-gray-800">
@@ -377,7 +377,7 @@
                     </div>
                 </div>
 
-                <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div class="bg-white p-6 rounded-3xl border border-gray-100">
                     <h3 class="font-bold text-lg mb-4 text-gray-900">Solicitar Alta</h3>
                     <div class="space-y-4">
                         <input type="text" id="signup-name" placeholder="Tu nombre" class="w-full bg-white rounded-xl px-4 py-3 outline-none border border-gray-200 focus:border-brand-teal focus:ring-1 focus:ring-brand-teal/30 text-sm text-gray-800">
