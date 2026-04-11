@@ -184,13 +184,27 @@ function renderCatalog() {
             const col = categoryColors[product.category] || categoryColors["Favoritos"];
             const article = document.createElement("article");
 
-            const poolAgua   = [IMGS.paletaCoco, IMGS.paletaLeche, IMGS.paletaMamey, IMGS.paletaMazapan, IMGS.paletaFresa, IMGS.paletaMango];
-            const poolCrema  = [IMGS.heladoCoco, IMGS.heladoLeche, IMGS.heladoMamey, IMGS.heladoMazapan, IMGS.boliNieve];
-            const poolGeneral= [...poolAgua, ...poolCrema];
-            let imgSrc;
-            if (product.category === "Sabores de Agua") imgSrc = poolAgua[product.id % poolAgua.length];
-            else if (["Helados de Crema"].includes(product.category)) imgSrc = poolCrema[product.id % poolCrema.length];
-            else imgSrc = poolGeneral[product.id % poolGeneral.length];
+            // Fotos públicas Unsplash — solo maqueta
+            const MOCK_IMGS = {
+                1:  "https://images.unsplash.com/photo-1488900128323-21503983a07e?w=300&h=300&fit=crop&auto=format", // paleta fresa
+                2:  "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=300&h=300&fit=crop&auto=format", // paleta oreo
+                3:  "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=300&h=300&fit=crop&auto=format", // berry
+                4:  "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&h=300&fit=crop&auto=format", // rosa
+                5:  "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=300&h=300&fit=crop&auto=format", // mango
+                6:  "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=300&h=300&fit=crop&auto=format", // maracuya
+                7:  "https://images.unsplash.com/photo-1629385701021-fec4e4f73f87?w=300&h=300&fit=crop&auto=format", // limon
+                8:  "https://images.unsplash.com/photo-1519735777090-ec97162dc266?w=300&h=300&fit=crop&auto=format", // guanabana
+                9:  "https://images.unsplash.com/photo-1580915411954-282cb3fc8b5f?w=300&h=300&fit=crop&auto=format", // leche
+                10: "https://images.unsplash.com/photo-1559703248-dcaaec9fab78?w=300&h=300&fit=crop&auto=format", // mazapan
+                11: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=300&h=300&fit=crop&auto=format", // cajeta
+                12: "https://images.unsplash.com/photo-1516559828984-686a0a76f153?w=300&h=300&fit=crop&auto=format", // mamey
+                13: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=300&h=300&fit=crop&auto=format", // coco
+                14: "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=300&h=300&fit=crop&auto=format", // chocolate
+                15: "https://images.unsplash.com/photo-1600718374662-0483d2b9da44?w=300&h=300&fit=crop&auto=format", // pistache
+                16: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=300&h=300&fit=crop&auto=format", // coco piña ron
+                17: "https://images.unsplash.com/photo-1506459225024-1428097a7e18?w=300&h=300&fit=crop&auto=format", // vino tinto frutos
+            };
+            const imgSrc = MOCK_IMGS[product.id] || IMGS.paletaFresa;
 
             const priceHtml = visiblePrice === null
                 ? `<p class="text-gray-400 text-xs italic font-medium">Inicia sesión para ver precio</p>`
@@ -247,13 +261,26 @@ function openProductModal(product) {
     const modal = document.getElementById("product-modal");
     if (!modal) return;
 
-    const poolAgua   = [IMGS.paletaCoco, IMGS.paletaLeche, IMGS.paletaMamey, IMGS.paletaMazapan, IMGS.paletaFresa, IMGS.paletaMango];
-    const poolCrema  = [IMGS.heladoCoco, IMGS.heladoLeche, IMGS.heladoMamey, IMGS.heladoMazapan, IMGS.boliNieve];
-    const poolGeneral= [...poolAgua, ...poolCrema];
-    let imgSrc;
-    if (product.category === "Sabores de Agua") imgSrc = poolAgua[product.id % poolAgua.length];
-    else if (product.category === "Helados de Crema") imgSrc = poolCrema[product.id % poolCrema.length];
-    else imgSrc = poolGeneral[product.id % poolGeneral.length];
+    const MOCK_IMGS_MODAL = {
+        1:  "https://images.unsplash.com/photo-1488900128323-21503983a07e?w=400&h=400&fit=crop&auto=format",
+        2:  "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&h=400&fit=crop&auto=format",
+        3:  "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=400&fit=crop&auto=format",
+        4:  "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=400&fit=crop&auto=format",
+        5:  "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400&h=400&fit=crop&auto=format",
+        6:  "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=400&h=400&fit=crop&auto=format",
+        7:  "https://images.unsplash.com/photo-1629385701021-fec4e4f73f87?w=400&h=400&fit=crop&auto=format",
+        8:  "https://images.unsplash.com/photo-1519735777090-ec97162dc266?w=400&h=400&fit=crop&auto=format",
+        9:  "https://images.unsplash.com/photo-1580915411954-282cb3fc8b5f?w=400&h=400&fit=crop&auto=format",
+        10: "https://images.unsplash.com/photo-1559703248-dcaaec9fab78?w=400&h=400&fit=crop&auto=format",
+        11: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=400&fit=crop&auto=format",
+        12: "https://images.unsplash.com/photo-1516559828984-686a0a76f153?w=400&h=400&fit=crop&auto=format",
+        13: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=400&h=400&fit=crop&auto=format",
+        14: "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=400&h=400&fit=crop&auto=format",
+        15: "https://images.unsplash.com/photo-1600718374662-0483d2b9da44?w=400&h=400&fit=crop&auto=format",
+        16: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=400&fit=crop&auto=format",
+        17: "https://images.unsplash.com/photo-1506459225024-1428097a7e18?w=400&h=400&fit=crop&auto=format",
+    };
+    const imgSrc = MOCK_IMGS_MODAL[product.id] || IMGS.paletaFresa;
 
     document.getElementById("modal-product-img").src = imgSrc;
     document.getElementById("modal-product-img").alt = product.name;
