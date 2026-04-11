@@ -83,49 +83,56 @@
     </style>
 </head>
 <body class="antialiased selection:bg-black selection:text-white pb-24 md:pb-16 relative overflow-x-hidden w-full m-0 p-0">
-    <div class="max-w-[1240px] w-full mx-auto px-4 sm:px-6 pt-3 space-y-10 md:space-y-16">
-        
-        <!-- Top Navbar (Desktop focused) -->
-        <header class="sticky top-2 z-40 rounded-2xl glass-panel px-4 py-3 md:py-2 flex items-center justify-between transition-all relative">
-            <div class="hidden md:flex items-center w-auto">
+
+    <!-- ═══ NAVBAR FULL-WIDTH ═══ -->
+    <header class="sticky top-0 z-40 w-full glass-panel transition-all">
+        <div class="max-w-[1240px] w-full mx-auto px-4 sm:px-6 py-3 md:py-2 flex items-center justify-between gap-4">
+
+            <!-- Logo -->
+            <div class="hidden md:flex items-center shrink-0">
                 <a href="#inicio" class="flex items-center group">
-                    <!-- Logo mas grande -->
-                    <img src="./assets/logo-artesanal.png" alt="Logo de La Artesanal" class="w-16 h-16 md:w-24 md:h-24 rounded-full border-2 border-black hover:scale-105 transition-transform bg-white -my-4 md:-my-6 relative z-10 shadow-sm">
+                    <img src="./assets/logo-artesanal.png" alt="Logo de La Artesanal"
+                         class="w-14 h-14 rounded-full border-2 border-white/60 hover:scale-105 transition-transform bg-white shadow-sm">
                 </a>
             </div>
 
             <!-- Desktop Nav -->
-            <nav id="main-nav" class="hidden md:flex flex-1 justify-center gap-2 text-center md:text-left">
-                <!-- Search Input unificado -->
-                <div class="relative w-full md:max-w-xs mb-4 md:mb-0 md:justify-self-end md:ml-auto md:mr-4">
-                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                     <input type="search" id="search-input" placeholder="Buscar producto..." class="w-full pl-10 pr-4 py-2.5 md:py-2 rounded-xl border-2 border-black bg-white focus:outline-none focus:ring-0 focus:border-brand-berry transition-all text-sm font-medium">
+            <nav id="main-nav" class="hidden md:flex flex-1 items-center justify-center gap-1">
+                <div class="relative w-full max-w-xs mr-4">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                    <input type="search" id="search-input" placeholder="Buscar producto..."
+                           class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-brand-berry transition-all text-sm font-medium shadow-sm">
                 </div>
-                
-                <a href="#inicio" class="px-3 py-2 rounded-xl text-brand-wood font-bold hover:bg-brand-berry/10 hover:text-brand-berry border-2 border-transparent hover:border-brand-berry/30 transition-colors text-sm">Inicio</a>
-                <a href="#catalogo" class="px-3 py-2 rounded-xl text-brand-wood font-bold hover:bg-brand-berry/10 hover:text-brand-berry border-2 border-transparent hover:border-brand-berry/30 transition-colors text-sm">Catálogo</a>
-                <a href="#novedades" class="px-3 py-2 rounded-xl text-brand-wood font-bold hover:bg-brand-berry/10 hover:text-brand-berry border-2 border-transparent hover:border-brand-berry/30 transition-colors text-sm">Novedades</a>
-                <!-- Injected dynamic links will go here -->
+                <a href="#inicio"   class="px-3 py-2 rounded-xl text-gray-600 font-semibold hover:bg-brand-berry/10 hover:text-brand-berry transition-colors text-sm">Inicio</a>
+                <a href="#catalogo" class="px-3 py-2 rounded-xl text-gray-600 font-semibold hover:bg-brand-berry/10 hover:text-brand-berry transition-colors text-sm">Catálogo</a>
+                <a href="#novedades"class="px-3 py-2 rounded-xl text-gray-600 font-semibold hover:bg-brand-berry/10 hover:text-brand-berry transition-colors text-sm">Novedades</a>
             </nav>
 
-            <div class="hidden md:flex gap-3 ml-auto" id="main-actions">
+            <div class="hidden md:flex gap-3 shrink-0" id="main-actions">
                 <button id="open-auth" class="btn-primary !py-2 !px-5 text-sm">Entrar</button>
             </div>
-            
-            <!-- Mobile Search Bar (only visible on small screens to replace the desktop one) -->
-            <div class="flex md:hidden relative w-full mb-1">
-                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                 <input type="search" id="mobile-search-input" placeholder="Buscar producto..." class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-black bg-white focus:outline-none focus:ring-0 focus:border-brand-berry shadow-[4px_4px_0_#111] transition-all text-base font-medium">
-            </div>
-        </header>
 
-
-            <!-- Hidden nodes for JS state -->
-            <div style="display: none;" aria-hidden="true">
-                 <strong id="current-profile-label">Publico</strong>
-                 <div id="session-status"></div>
+            <!-- Mobile: logo + search -->
+            <a href="#inicio" class="flex md:hidden items-center shrink-0">
+                <img src="./assets/logo-artesanal.png" alt="Logo"
+                     class="w-10 h-10 rounded-full border border-white/60 bg-white shadow-sm">
+            </a>
+            <div class="flex md:hidden relative flex-1">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                <input type="search" id="mobile-search-input" placeholder="Buscar producto..."
+                       class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-brand-berry transition-all text-sm font-medium shadow-sm">
             </div>
-        </header>
+        </div>
+    </header>
+
+    <!-- Hidden nodes for JS state -->
+    <div style="display:none" aria-hidden="true">
+        <strong id="current-profile-label">Publico</strong>
+        <div id="session-status"></div>
+    </div>
+
+    <!-- ═══ CONTENIDO ═══ -->
+    <div class="max-w-[1240px] w-full mx-auto px-4 sm:px-6 pt-8 space-y-10 md:space-y-16">
 
         <main class="space-y-16 lg:space-y-24">
             
