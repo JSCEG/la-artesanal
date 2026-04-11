@@ -1,5 +1,5 @@
 import { products, dashboardData } from "./catalog.js";
-import { APP_CONFIG } from "./config.js";
+import { APP_CONFIG, IMGS } from "./config.js";
 import {
     getProfile,
     getSession,
@@ -180,9 +180,9 @@ function renderCatalog() {
             const col = categoryColors[product.category] || categoryColors["Favoritos"];
             const article = document.createElement("article");
 
-            let imgSrc = "./assets/paleta_fresa.png";
-            if (product.category === "Sabores de Agua") imgSrc = "./assets/paleta_mango.png";
-            if (["Helados de Crema","Favoritos"].includes(product.category)) imgSrc = "./assets/bolita_nieve.png";
+            let imgSrc = IMGS.paletaFresa;
+            if (product.category === "Sabores de Agua") imgSrc = IMGS.paletaMango;
+            if (["Helados de Crema","Favoritos"].includes(product.category)) imgSrc = IMGS.boliNieve;
 
             const priceHtml = visiblePrice === null
                 ? `<p class="text-gray-400 text-xs italic font-medium">Inicia sesión para ver precio</p>`
@@ -239,9 +239,9 @@ function openProductModal(product) {
     const modal = document.getElementById("product-modal");
     if (!modal) return;
 
-    let imgSrc = "./assets/paleta_fresa.png";
-    if (product.category === "Sabores de Agua") imgSrc = "./assets/paleta_mango.png";
-    if (product.category === "Helados de Crema" || product.category === "Favoritos") imgSrc = "./assets/bolita_nieve.png";
+    let imgSrc = IMGS.paletaFresa;
+    if (product.category === "Sabores de Agua") imgSrc = IMGS.paletaMango;
+    if (product.category === "Helados de Crema" || product.category === "Favoritos") imgSrc = IMGS.boliNieve;
 
     document.getElementById("modal-product-img").src = imgSrc;
     document.getElementById("modal-product-img").alt = product.name;
@@ -251,7 +251,7 @@ function openProductModal(product) {
     const existingWM = modalImgWrapper.querySelector(".modal-watermark");
     if (existingWM) existingWM.remove();
     const wm = document.createElement("img");
-    wm.src = "./assets/logo-artesanal.png";
+    wm.src = IMGS.logo;
     wm.className = "modal-watermark absolute bottom-3 right-3 w-12 h-12 rounded-full opacity-50 border-2 border-white/70 pointer-events-none select-none";
     wm.setAttribute("aria-hidden", "true");
     modalImgWrapper.style.position = "relative";
