@@ -1,13 +1,19 @@
-export const CDN = "https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/";
+const CDN_IMG  = "https://cdn.sassoapps.com/la-artesanal/img/";
+const CDN_VID  = "https://cdn.sassoapps.com/la-artesanal/video/";
 
 export const IMGS = {
-    logo:         CDN + "logo.png",
-    paletaFresa:  CDN + "paleta_fresa.png",
-    paletaMango:  CDN + "paleta_mango.png",
-    boliNieve:    CDN + "bolita_nieve.png",
-    carritoEvento:CDN + "carrito_evento.png",
-    pajaroL:      CDN + "pajaritol.png",
-    pajaroR:      CDN + "pajarito-r.png",
+    logo:         CDN_IMG + "logo.png",
+    aro:          CDN_IMG + "aro.png",
+    paletaFresa:  CDN_IMG + "paleta_fresa.png",
+    paletaMango:  CDN_IMG + "paleta_mango.png",
+    boliNieve:    CDN_IMG + "bolita_nieve.png",
+    carritoEvento:CDN_IMG + "carrito_evento.png",
+    pajaroL:      CDN_IMG + "pajaritol.png",
+    pajaroR:      CDN_IMG + "pajarito-r.png",
+};
+
+export const VIDEOS = {
+    promo: CDN_VID + "video.mp4",
 };
 
 export const APP_CONFIG = {
