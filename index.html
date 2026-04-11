@@ -35,22 +35,47 @@
 
         body {
             font-family: var(--font-sans);
-            color: #111;
-            background: #ffffff;
+            color: var(--color-brand-wood);
+            background:
+                radial-gradient(ellipse at top left, rgba(177,48,107,0.09), transparent 42%),
+                radial-gradient(ellipse at top right, rgba(45,102,128,0.09), transparent 38%),
+                radial-gradient(ellipse at bottom center, rgba(235,121,111,0.06), transparent 50%),
+                linear-gradient(180deg, #fffdf8 0%, #f8f0df 100%);
+            background-attachment: fixed;
             min-height: 100vh;
         }
 
         @layer components {
+            /* Navbar glass cálido */
             .glass-panel {
-                @apply bg-white border-2 border-black;
-            }
-            
-            .btn-primary {
-                @apply px-6 py-3 rounded-xl font-bold text-white bg-black border-2 border-black hover:bg-brand-berry hover:border-brand-berry hover:shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none transition-all duration-200;
+                @apply bg-brand-cream/80 backdrop-blur-xl border-2 border-brand-cream-strong shadow-md shadow-brand-wood/10;
             }
 
+            /* CTA principal — berry */
+            .btn-primary {
+                @apply px-6 py-3 rounded-xl font-bold text-white
+                       bg-gradient-to-br from-brand-berry to-brand-berry-soft
+                       border-2 border-brand-berry/70
+                       shadow-[4px_4px_0_rgba(177,48,107,0.35)]
+                       hover:-translate-y-0.5 hover:shadow-[4px_6px_0_rgba(177,48,107,0.45)]
+                       active:translate-y-1 active:shadow-none transition-all duration-200;
+            }
+
+            /* CTA secundario — teal */
             .btn-secondary {
-                @apply px-6 py-3 rounded-xl font-bold text-black bg-white border-2 border-black hover:shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none transition-all duration-200;
+                @apply px-6 py-3 rounded-xl font-bold text-brand-teal
+                       bg-white border-2 border-brand-teal
+                       shadow-[4px_4px_0_rgba(45,102,128,0.3)]
+                       hover:-translate-y-0.5 hover:bg-brand-teal hover:text-white hover:shadow-[4px_6px_0_rgba(45,102,128,0.4)]
+                       active:translate-y-1 active:shadow-none transition-all duration-200;
+            }
+
+            /* Chip de categoría */
+            .chip-tag {
+                @apply px-3 py-1 text-xs font-black uppercase tracking-widest
+                       border-2 border-brand-wood/20 bg-brand-cream text-brand-wood
+                       rounded-full hover:border-brand-berry hover:text-brand-berry
+                       transition-colors cursor-pointer;
             }
         }
     </style>
@@ -59,7 +84,7 @@
     <div class="max-w-[1240px] w-full mx-auto px-4 sm:px-6 pt-3 space-y-10 md:space-y-16">
         
         <!-- Top Navbar (Desktop focused) -->
-        <header class="sticky top-2 z-40 rounded-2xl glass-panel px-4 py-3 md:py-2 flex items-center justify-between transition-all bg-white relative">
+        <header class="sticky top-2 z-40 rounded-2xl glass-panel px-4 py-3 md:py-2 flex items-center justify-between transition-all relative">
             <div class="hidden md:flex items-center w-auto">
                 <a href="#inicio" class="flex items-center group">
                     <!-- Logo mas grande -->
@@ -75,9 +100,9 @@
                      <input type="search" id="search-input" placeholder="Buscar producto..." class="w-full pl-10 pr-4 py-2.5 md:py-2 rounded-xl border-2 border-black bg-white focus:outline-none focus:ring-0 focus:border-brand-berry transition-all text-sm font-medium">
                 </div>
                 
-                <a href="#inicio" class="px-3 py-2 rounded-xl text-black font-bold hover:bg-gray-100 border-2 border-transparent hover:border-black transition-colors text-sm">Inicio</a>
-                <a href="#catalogo" class="px-3 py-2 rounded-xl text-black font-bold hover:bg-gray-100 border-2 border-transparent hover:border-black transition-colors text-sm">Catálogo</a>
-                <a href="#novedades" class="px-3 py-2 rounded-xl text-black font-bold hover:bg-gray-100 border-2 border-transparent hover:border-black transition-colors text-sm">Novedades</a>
+                <a href="#inicio" class="px-3 py-2 rounded-xl text-brand-wood font-bold hover:bg-brand-berry/10 hover:text-brand-berry border-2 border-transparent hover:border-brand-berry/30 transition-colors text-sm">Inicio</a>
+                <a href="#catalogo" class="px-3 py-2 rounded-xl text-brand-wood font-bold hover:bg-brand-berry/10 hover:text-brand-berry border-2 border-transparent hover:border-brand-berry/30 transition-colors text-sm">Catálogo</a>
+                <a href="#novedades" class="px-3 py-2 rounded-xl text-brand-wood font-bold hover:bg-brand-berry/10 hover:text-brand-berry border-2 border-transparent hover:border-brand-berry/30 transition-colors text-sm">Novedades</a>
                 <!-- Injected dynamic links will go here -->
             </nav>
 
@@ -105,17 +130,17 @@
             <!-- Hero -->
             <section class="flex flex-col items-center text-center" id="inicio">
                 <img src="./assets/logo-artesanal.png" alt="Logo de La Artesanal" class="w-44 h-44 mx-auto block md:hidden rounded-full border-4 border-black mb-6 shadow-[4px_4px_0_#111] object-cover bg-white">
-                <span class="inline-block px-4 py-1.5 rounded-full bg-black text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-sm border-2 border-white">¡AQUÍ SÍ ES NIEVE ARTESANAL!</span>
+                <span class="inline-block px-4 py-1.5 rounded-full bg-brand-berry text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-[3px_3px_0_rgba(177,48,107,0.3)] border-2 border-brand-berry-soft">¡AQUÍ SÍ ES NIEVE ARTESANAL!</span>
                     
                 <div class="relative w-full max-w-3xl">
                     <img src="./img/pajaritol.png" alt="Ave decorativa" class="absolute -top-6 md:-top-12 -left-4 md:-left-12 w-16 md:w-24 drop-shadow-[0_0_10px_rgba(255,255,255,1)] z-20 -rotate-12 hover:-translate-y-2 hover:rotate-0 transition-transform cursor-pointer">
                     <img src="./img/pajarito-r.png" alt="Ave decorativa" class="absolute -top-8 md:-top-10 -right-2 md:-right-4 w-16 md:w-24 drop-shadow-[0_0_10px_rgba(255,255,255,1)] z-20 rotate-12 hover:-translate-y-2 hover:rotate-0 transition-transform cursor-pointer">
                     
-                    <h1 class="relative z-10 font-display text-5xl md:text-8xl font-black text-black leading-none mb-6">
+                    <h1 class="relative z-10 font-display text-5xl md:text-8xl font-black text-brand-wood leading-none mb-6">
                         Hecha a mano,<br> <span class="text-brand-berry italic drop-shadow-md">como debe ser.</span>
                     </h1>
                 </div>
-                <p class="text-gray-700 text-lg md:text-2xl mb-8 leading-relaxed max-w-2xl font-medium">
+                <p class="text-brand-wood-soft text-lg md:text-2xl mb-8 leading-relaxed max-w-2xl font-medium">
                     Refrescantes paletas y nieves creadas con recetas tradicionales. 
                     En Huasca de Ocampo y para eventos en toda la región.
                 </p>
@@ -126,7 +151,7 @@
             </section>
 
             <!-- Promo Video -->
-            <section class="rounded-3xl border-2 border-black shadow-[8px_8px_0_#111] bg-black relative group w-full overflow-hidden flex justify-center" id="promo-video">
+            <section class="rounded-3xl border-2 border-brand-wood/40 shadow-[8px_8px_0_rgba(91,56,34,0.35)] bg-brand-wood relative group w-full overflow-hidden flex justify-center" id="promo-video">
                 <video 
                     src="./video/video.mp4" 
                     class="w-full h-auto max-h-[80vh] object-contain opacity-95 group-hover:opacity-100 transition-opacity duration-300" 
@@ -140,7 +165,7 @@
             <section id="catalogo" class="scroll-mt-24">
                 <div class="flex flex-col items-center mb-10 text-center">
                     <h2 class="font-display text-4xl md:text-5xl font-black text-black">Cátalogo</h2>
-                    <div class="w-24 h-2 bg-black mt-4"></div>
+                    <div class="w-24 h-2 bg-brand-berry mt-4 rounded-full"></div>
                 </div>
 
                 <div class="flex flex-wrap gap-3 mb-6 justify-center" id="category-filters"></div>
@@ -155,40 +180,40 @@
             <section id="novedades" class="scroll-mt-24">
                 <div class="flex flex-col items-center mb-10 text-center">
                     <h2 class="font-display text-4xl md:text-5xl font-black text-black">Novedades</h2>
-                    <div class="w-24 h-2 bg-black mt-4"></div>
+                    <div class="w-24 h-2 bg-brand-berry mt-4 rounded-full"></div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Tarjeta 1 -->
-                    <article class="bg-white border-2 border-black rounded-2xl shadow-[6px_6px_0_#111] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_var(--color-brand-berry)] transition-all flex flex-col cursor-pointer">
-                        <img src="./assets/paleta_fresa.png" alt="Paleta de Fresa" class="w-full h-64 object-cover border-b-2 border-black">
+                    <!-- Tarjeta 1 — Berry (fresa) -->
+                    <article class="bg-white border-2 border-brand-berry/20 rounded-2xl shadow-[6px_6px_0_rgba(177,48,107,0.2)] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_rgba(177,48,107,0.4)] hover:border-brand-berry/50 transition-all flex flex-col cursor-pointer">
+                        <img src="./assets/paleta_fresa.png" alt="Paleta de Fresa" class="w-full h-64 object-cover border-b-2 border-brand-berry/20">
                         <div class="p-6 flex-1 flex flex-col">
-                            <span class="text-xs font-bold uppercase tracking-widest text-black mb-2 border-2 border-black px-2 py-1 bg-white w-fit">Temporada</span>
-                            <h3 class="font-display text-2xl font-black text-black mb-3 leading-tight">La Fresa Perfecta</h3>
-                            <p class="text-gray-700 font-medium text-sm leading-relaxed mb-4">Nueva cosecha de fresas michoacanas molidas artesanalmente para nuestro clásico sabor rojo.</p>
-                            <span class="text-gray-500 font-bold text-xs mt-auto">Hace 2 días</span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-brand-berry mb-2 border-2 border-brand-berry/40 px-2 py-1 bg-brand-berry/5 w-fit rounded-full">Temporada</span>
+                            <h3 class="font-display text-2xl font-black text-brand-wood mb-3 leading-tight">La Fresa Perfecta</h3>
+                            <p class="text-brand-wood-soft font-medium text-sm leading-relaxed mb-4">Nueva cosecha de fresas michoacanas molidas artesanalmente para nuestro clásico sabor rojo.</p>
+                            <span class="text-brand-wood/40 font-bold text-xs mt-auto">Hace 2 días</span>
                         </div>
                     </article>
 
-                    <!-- Tarjeta 2 -->
-                    <article class="bg-white border-2 border-black rounded-2xl shadow-[6px_6px_0_#111] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_var(--color-brand-teal)] transition-all flex flex-col cursor-pointer">
-                        <img src="./assets/paleta_mango.png" alt="Paleta de Mango" class="w-full h-64 object-cover border-b-2 border-black">
+                    <!-- Tarjeta 2 — Teal (mango) -->
+                    <article class="bg-white border-2 border-brand-teal/20 rounded-2xl shadow-[6px_6px_0_rgba(45,102,128,0.2)] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_rgba(45,102,128,0.4)] hover:border-brand-teal/50 transition-all flex flex-col cursor-pointer">
+                        <img src="./assets/paleta_mango.png" alt="Paleta de Mango" class="w-full h-64 object-cover border-b-2 border-brand-teal/20">
                         <div class="p-6 flex-1 flex flex-col">
-                            <span class="text-xs font-bold uppercase tracking-widest text-black mb-2 border-2 border-black px-2 py-1 bg-white w-fit">Receta</span>
-                            <h3 class="font-display text-2xl font-black text-black mb-3 leading-tight">Mango con toque único</h3>
-                            <p class="text-gray-700 font-medium text-sm leading-relaxed mb-4">El rey del calor aterrizó; un estallido de color amarillo vibrante en cada bocado.</p>
-                            <span class="text-gray-500 font-bold text-xs mt-auto">Hace 1 semana</span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-brand-teal mb-2 border-2 border-brand-teal/40 px-2 py-1 bg-brand-teal/5 w-fit rounded-full">Receta</span>
+                            <h3 class="font-display text-2xl font-black text-brand-wood mb-3 leading-tight">Mango con toque único</h3>
+                            <p class="text-brand-wood-soft font-medium text-sm leading-relaxed mb-4">El rey del calor aterrizó; un estallido de color amarillo vibrante en cada bocado.</p>
+                            <span class="text-brand-wood/40 font-bold text-xs mt-auto">Hace 1 semana</span>
                         </div>
                     </article>
 
-                    <!-- Tarjeta 3 -->
-                    <article class="bg-white border-2 border-black rounded-2xl shadow-[6px_6px_0_#111] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_var(--color-brand-coral)] transition-all flex flex-col cursor-pointer">
-                        <img src="./assets/carrito_evento.png" alt="Carrito de Eventos" class="w-full h-64 object-cover border-b-2 border-black">
+                    <!-- Tarjeta 3 — Coral (evento) -->
+                    <article class="bg-white border-2 border-brand-coral/20 rounded-2xl shadow-[6px_6px_0_rgba(235,121,111,0.25)] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_rgba(235,121,111,0.45)] hover:border-brand-coral/50 transition-all flex flex-col cursor-pointer">
+                        <img src="./assets/carrito_evento.png" alt="Carrito de Eventos" class="w-full h-64 object-cover border-b-2 border-brand-coral/20">
                         <div class="p-6 flex-1 flex flex-col">
-                            <span class="text-xs font-bold uppercase tracking-widest text-black mb-2 border-2 border-black px-2 py-1 bg-white w-fit">Noticia</span>
-                            <h3 class="font-display text-2xl font-black text-black mb-3 leading-tight">Llevamos el carrito</h3>
-                            <p class="text-gray-700 font-medium text-sm leading-relaxed mb-4">Estuvimos refrescando el verano con nuestro estante minimalista corporativo. ¡Pídelo!</p>
-                            <span class="text-gray-500 font-bold text-xs mt-auto">Hace 1 mes</span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-brand-coral mb-2 border-2 border-brand-coral/40 px-2 py-1 bg-brand-coral/5 w-fit rounded-full">Noticia</span>
+                            <h3 class="font-display text-2xl font-black text-brand-wood mb-3 leading-tight">Llevamos el carrito</h3>
+                            <p class="text-brand-wood-soft font-medium text-sm leading-relaxed mb-4">Estuvimos refrescando el verano con nuestro estante minimalista corporativo. ¡Pídelo!</p>
+                            <span class="text-brand-wood/40 font-bold text-xs mt-auto">Hace 1 mes</span>
                         </div>
                     </article>
                 </div>
@@ -210,13 +235,13 @@
             <canvas id="sales-chart" class="hidden"></canvas>
 
             <!-- Contacto -->
-            <section id="contacto" class="scroll-mt-24 bg-white border-2 border-black text-black rounded-3xl p-8 md:p-12 shadow-[6px_6px_0_#111]">
+            <section id="contacto" class="scroll-mt-24 bg-gradient-to-br from-brand-cream to-brand-cream-strong border-2 border-brand-wood/20 text-brand-wood rounded-3xl p-8 md:p-12 shadow-[6px_6px_0_rgba(91,56,34,0.2)]">
                 <div class="md:grid md:grid-cols-2 gap-12 items-start">
                     <!-- Info + WhatsApp -->
                     <div>
-                        <p class="text-black font-bold uppercase tracking-widest text-xs mb-3 border-2 border-black inline-block px-3 py-1 bg-white">Hablemos</p>
-                        <h2 class="font-display text-3xl md:text-5xl font-black mb-6">Contáctanos</h2>
-                        <p class="text-gray-700 mb-8 max-w-md font-medium">¿Buscas distribución, abrir un punto de venta o cotizar para un evento? Estamos en Huasca de Ocampo.</p>
+                        <p class="text-brand-berry font-bold uppercase tracking-widest text-xs mb-3 border-2 border-brand-berry/40 inline-block px-3 py-1 bg-white/60 rounded-full">Hablemos</p>
+                        <h2 class="font-display text-3xl md:text-5xl font-black mb-6 text-brand-wood">Contáctanos</h2>
+                        <p class="text-brand-wood-soft mb-8 max-w-md font-medium">¿Buscas distribución, abrir un punto de venta o cotizar para un evento? Estamos en Huasca de Ocampo.</p>
                         
                         <div class="space-y-4 font-bold text-black border-l-4 border-brand-berry pl-4 mb-8">
                             <p id="brand-contact-name" class="font-display text-2xl"></p>
@@ -230,7 +255,7 @@
                             <p class="flex items-center gap-2 font-bold text-xs uppercase tracking-widest text-black mb-3">
                                 <i data-lucide="clock" class="w-4 h-4 text-brand-berry"></i> Horarios de Atención
                             </p>
-                            <div id="contact-hours" class="rounded-xl border-2 border-black bg-white/80 px-4 py-2 divide-y divide-black/10 text-black shadow-[3px_3px_0_#111]"></div>
+                            <div id="contact-hours" class="rounded-xl border-2 border-brand-wood/15 bg-white/70 px-4 py-2 divide-y divide-brand-wood/10 text-brand-wood shadow-[3px_3px_0_rgba(91,56,34,0.15)]"></div>
                         </div>
 
                         <a href="#" id="whatsapp-link" class="px-6 py-3 rounded-xl font-bold text-white bg-black border-2 border-black hover:bg-[#25D366] hover:border-[#25D366] hover:shadow-[4px_4px_0_#111] transition-all flex items-center justify-center gap-2 w-fit">
@@ -254,13 +279,13 @@
             </section>
 
             <!-- FOOTER -->
-            <footer class="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 pb-4 border-t-2 border-black">
-                <p class="text-gray-600 font-bold text-sm">© 2026 La Artesanal. Hecho a mano.</p>
+            <footer class="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 pb-4 border-t-2 border-brand-berry/30">
+                <p class="text-brand-wood-soft font-bold text-sm">© 2026 La Artesanal. Hecho a mano.</p>
                 <div class="flex gap-4">
-                    <a href="#" class="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-black hover:bg-black hover:text-white hover:-translate-y-1 transition-all">
+                    <a href="#" class="w-10 h-10 rounded-full border-2 border-brand-berry/40 flex items-center justify-center text-brand-berry hover:bg-brand-berry hover:text-white hover:border-brand-berry hover:-translate-y-1 transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
                     </a>
-                    <a href="#" class="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-black hover:bg-black hover:text-white hover:-translate-y-1 transition-all">
+                    <a href="#" class="w-10 h-10 rounded-full border-2 border-brand-berry/40 flex items-center justify-center text-brand-berry hover:bg-brand-berry hover:text-white hover:border-brand-berry hover:-translate-y-1 transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                     </a>
                 </div>
@@ -269,20 +294,20 @@
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="fixed inset-x-0 bottom-0 bg-white border-t-2 border-black z-[9999] md:hidden flex justify-around items-center pt-3 px-2 pb-6 w-full shadow-[0px_-2px_10px_rgba(0,0,0,0.1)]" id="mobile-bottom-nav">
-        <a href="#inicio" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors w-full">
+    <nav class="fixed inset-x-0 bottom-0 bg-brand-cream/95 backdrop-blur-xl border-t-2 border-brand-berry/20 z-[9999] md:hidden flex justify-around items-center pt-3 px-2 pb-6 w-full shadow-[0px_-4px_20px_rgba(177,48,107,0.1)]" id="mobile-bottom-nav">
+        <a href="#inicio" class="flex flex-col items-center p-2 text-brand-wood hover:text-brand-berry transition-colors w-full">
             <i data-lucide="home" class="w-6 h-6 mb-1 mx-auto"></i>
             <span class="text-[10px] font-bold text-center block">Inicio</span>
         </a>
-        <a href="#catalogo" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors w-full">
+        <a href="#catalogo" class="flex flex-col items-center p-2 text-brand-wood hover:text-brand-berry transition-colors w-full">
             <i data-lucide="ice-cream" class="w-6 h-6 mb-1 mx-auto"></i>
             <span class="text-[10px] font-bold text-center block">Catálogo</span>
         </a>
-        
+
         <!-- Dynamic Mobile Actions (Cart, Profile, Admin) get injected here -->
         <div id="mobile-dynamic-actions" class="flex justify-around items-center contents"></div>
-        
-        <button id="mobile-open-auth" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors w-full outline-none">
+
+        <button id="mobile-open-auth" class="flex flex-col items-center p-2 text-brand-wood hover:text-brand-berry transition-colors w-full outline-none">
             <i data-lucide="user-circle" class="w-6 h-6 mb-1 mx-auto"></i>
             <span class="text-[10px] font-bold text-center block">Entrar</span>
         </button>
@@ -290,24 +315,28 @@
 
     <!-- Product Detail Modal -->
     <dialog id="product-modal" class="backdrop:bg-black/60 backdrop:backdrop-blur-sm bg-transparent border-none p-4 max-w-full m-auto w-full md:w-[640px] shadow-2xl">
-        <div class="bg-white rounded-3xl border-2 border-black shadow-[8px_8px_0_#111] overflow-hidden relative">
-            <button id="close-product-modal" class="absolute top-4 right-4 z-20 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-black text-lg hover:bg-brand-berry transition-colors">✕</button>
-            <img id="modal-product-img" src="" alt="" class="w-full h-56 md:h-72 object-cover border-b-2 border-black">
+        <div class="bg-white rounded-3xl border-2 border-brand-berry/20 shadow-[8px_8px_0_rgba(177,48,107,0.2)] overflow-hidden relative">
+            <button id="close-product-modal" class="absolute top-4 right-4 z-20 w-10 h-10 bg-brand-berry text-white rounded-full flex items-center justify-center font-black text-lg hover:bg-brand-berry-soft transition-colors shadow-md">✕</button>
+            <img id="modal-product-img" src="" alt="" class="w-full h-56 md:h-72 object-cover border-b-2 border-brand-berry/15">
             <div class="p-6 md:p-8">
-                <span id="modal-product-category" class="inline-block px-3 py-1 text-xs font-black uppercase tracking-wider border-2 border-black bg-white mb-3"></span>
-                <h2 id="modal-product-name" class="font-display text-3xl md:text-4xl font-black text-black mb-3 leading-tight"></h2>
-                <p id="modal-product-desc" class="text-gray-700 font-medium leading-relaxed mb-6"></p>
-                <div class="flex items-center justify-between pt-4 border-t-2 border-black">
+                <span id="modal-product-category" class="inline-block px-3 py-1 text-xs font-black uppercase tracking-wider border-2 border-brand-berry/30 bg-brand-berry/5 text-brand-berry mb-3 rounded-full"></span>
+                <h2 id="modal-product-name" class="font-display text-3xl md:text-4xl font-black text-brand-wood mb-3 leading-tight"></h2>
+                <p id="modal-product-desc" class="text-brand-wood-soft font-medium leading-relaxed mb-6"></p>
+                <div class="flex items-center justify-between pt-4 border-t-2 border-brand-cream-strong">
                     <div>
-                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Presentación</p>
-                        <p id="modal-product-unit" class="font-black text-black text-lg"></p>
+                        <p class="text-brand-wood/50 text-xs font-bold uppercase tracking-wider mb-1">Presentación</p>
+                        <p id="modal-product-unit" class="font-black text-brand-wood text-lg"></p>
                     </div>
                     <div class="text-right">
-                        <p id="modal-price-label" class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Precio</p>
+                        <p id="modal-price-label" class="text-brand-wood/50 text-xs font-bold uppercase tracking-wider mb-1">Precio</p>
                         <p id="modal-product-price" class="font-display text-4xl font-black text-brand-berry"></p>
                     </div>
                 </div>
-                <button id="modal-add-cart" class="mt-6 w-full bg-black text-white font-black py-4 rounded-2xl text-lg border-2 border-black hover:bg-brand-berry hover:border-brand-berry hover:shadow-[4px_4px_0_#111] transition-all">Agregar al Carrito 🛒</button>
+                <button id="modal-add-cart" class="mt-6 w-full font-black py-4 rounded-2xl text-lg border-2 transition-all
+                    bg-gradient-to-br from-brand-berry to-brand-berry-soft text-white border-brand-berry/50
+                    shadow-[4px_4px_0_rgba(177,48,107,0.3)]
+                    hover:-translate-y-0.5 hover:shadow-[4px_6px_0_rgba(177,48,107,0.4)]
+                    active:translate-y-1 active:shadow-none">Agregar al Carrito 🛒</button>
             </div>
         </div>
     </dialog>
