@@ -168,45 +168,66 @@ function renderCatalog() {
 
         const track = rowSection.querySelector("div:nth-of-type(2)");
 
+        // Color palette per category
+        const categoryColors = {
+            "Favoritos":       { bg: "#b1306b", shadow: "rgba(177,48,107,0.35)",  text: "#ffffff" },
+            "Sabores de Agua": { bg: "#2d6680", shadow: "rgba(45,102,128,0.35)",  text: "#ffffff" },
+            "Helados de Crema":{ bg: "#c07a3e", shadow: "rgba(192,122,62,0.35)",  text: "#ffffff" },
+            "Licor":           { bg: "#7c4fa0", shadow: "rgba(124,79,160,0.35)",  text: "#ffffff" },
+        };
+
         catProducts.forEach(product => {
             const visiblePrice = getVisiblePrice(product);
             const article = document.createElement("article");
-            
+            const col = categoryColors[product.category] || categoryColors["Favoritos"];
+
             let imgSrc = "./assets/paleta_fresa.png";
             if (product.category === "Sabores de Agua") imgSrc = "./assets/paleta_mango.png";
             if (product.category === "Helados de Crema" || product.category === "Favoritos") imgSrc = "./assets/bolita_nieve.png";
 
-            article.className = "snap-center shrink-0 w-72 sm:w-80 bg-white rounded-2xl transition-all border-2 border-black shadow-[6px_6px_0px_#111] flex flex-col hover:shadow-[8px_8px_0px_var(--color-brand-berry)] hover:-translate-y-1 overflow-hidden";
+            const priceHtml = visiblePrice === null
+                ? `<p class="text-white/60 text-xs italic font-medium">Inicia sesión para ver precio</p>`
+                : `<p class="font-display text-2xl font-black text-white">${formatCurrency(visiblePrice)}</p>`;
+
+            article.className = "snap-center shrink-0 w-56 flex flex-col items-center cursor-pointer group";
             article.innerHTML = `
-                <div class="relative overflow-hidden border-b-2 border-black">
-                    <img src="${imgSrc}" alt="${product.name}" class="w-full h-40 object-cover bg-gray-50 pointer-events-none">
-                    <img src="./assets/logo-artesanal.png" alt="" aria-hidden="true" class="absolute bottom-2 right-2 w-8 h-8 rounded-full opacity-50 border border-white/60 pointer-events-none select-none">
+                <!-- Imagen flotante -->
+                <div class="relative z-10 w-40 h-40 mb-0 flex items-end justify-center">
+                    <img src="${imgSrc}" alt="${product.name}"
+                         class="w-36 h-36 object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,0.25)]
+                                group-hover:-translate-y-2 transition-transform duration-300 pointer-events-none">
                 </div>
-                <div class="p-5 flex flex-col gap-3 flex-1">
-                    <div>
-                        <h4 class="font-display text-xl font-black text-black mb-1 leading-tight">${product.name}</h4>
-                        <p class="text-gray-700 font-medium text-xs leading-relaxed line-clamp-2">${product.description}</p>
+                <!-- Card body -->
+                <div class="w-full rounded-3xl -mt-14 pt-16 pb-7 px-5 text-center flex flex-col items-center gap-3 transition-all duration-300
+                            group-hover:-translate-y-1 group-hover:shadow-[0_16px_40px_${col.shadow}]"
+                     style="background:${col.bg}; box-shadow: 0 8px 24px ${col.shadow}">
+                    <h4 class="font-display text-lg font-black text-white uppercase tracking-wide leading-tight">${product.name}</h4>
+                    <!-- Tres puntos decorativos -->
+                    <div class="flex gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-white/50"></span>
                     </div>
-                    <div class="mt-auto pt-2">
-                        <span class="text-gray-500 text-[10px] block mb-1 font-bold">Presentación: ${product.unit}</span>
-                        ${
-                            visiblePrice === null
-                                ? `<span class="text-gray-500 text-xs italic font-medium">Precio final tras iniciar sesión.</span>`
-                                : `<div class="flex items-baseline gap-2"><span class="font-display text-3xl font-black text-black">${formatCurrency(visiblePrice)}</span>
-                                   <span class="text-gray-500 text-[10px] mb-1 font-bold uppercase tracking-wider">${state.commercialProfile}</span></div>`
-                        }
-                    </div>
-                    <div class="flex items-center justify-between mt-1 pt-3 border-t-2 border-black">
-                        <button class="bg-white border-2 border-black hover:bg-black hover:text-white hover:shadow-[4px_4px_0_#111] text-black w-full py-2 rounded-xl font-black text-sm transition-all text-center" type="button">Agregar al Carrito</button>
-                    </div>
+                    <p class="text-white/80 text-xs font-medium leading-relaxed line-clamp-3">${product.description}</p>
+                    ${priceHtml}
+                    <!-- Botón circular -->
+                    <button type="button"
+                            class="mt-1 w-10 h-10 bg-white rounded-full flex items-center justify-center
+                                   shadow-md hover:scale-110 active:scale-95 transition-transform"
+                            style="color:${col.bg}" aria-label="Agregar al carrito">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
                 </div>
             `;
-            
+
             article.querySelector("button").addEventListener("click", (e) => {
                 e.stopPropagation();
                 addToCart(product.id);
             });
-            article.style.cursor = "pointer";
             article.addEventListener("click", () => openProductModal(product));
             track.appendChild(article);
         });
