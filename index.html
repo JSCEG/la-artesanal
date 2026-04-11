@@ -236,15 +236,15 @@
             <canvas id="sales-chart" class="hidden"></canvas>
 
             <!-- Contacto -->
-            <section id="contacto" class="scroll-mt-24 bg-gradient-to-br from-brand-berry to-brand-berry-soft text-white rounded-3xl p-8 md:p-12 shadow-[6px_6px_0_rgba(177,48,107,0.35)]">
+            <section id="contacto" class="scroll-mt-24 bg-white text-gray-900 rounded-3xl p-8 md:p-12 shadow-[6px_6px_0_rgba(177,48,107,0.15)] border border-brand-berry/10">
                 <div class="md:grid md:grid-cols-2 gap-12 items-start">
                     <!-- Info + WhatsApp -->
                     <div>
-                        <p class="text-white/80 font-bold uppercase tracking-widest text-xs mb-3 border-2 border-white/40 inline-block px-3 py-1 bg-white/20 rounded-full">Hablemos</p>
-                        <h2 class="font-display text-3xl md:text-5xl font-black mb-6 text-white">Contáctanos</h2>
-                        <p class="text-white/80 mb-8 max-w-md font-medium">¿Buscas distribución, abrir un punto de venta o cotizar para un evento? Estamos en Huasca de Ocampo.</p>
+                        <p class="text-brand-berry font-bold uppercase tracking-widest text-xs mb-3 border-2 border-brand-berry/30 inline-block px-3 py-1 bg-brand-berry/5 rounded-full">Hablemos</p>
+                        <h2 class="font-display text-3xl md:text-5xl font-black mb-6 text-gray-900">Contáctanos</h2>
+                        <p class="text-gray-500 mb-8 max-w-md font-medium">¿Buscas distribución, abrir un punto de venta o cotizar para un evento? Estamos en Huasca de Ocampo.</p>
 
-                        <div class="space-y-4 font-bold text-white border-l-4 border-white/50 pl-4 mb-8">
+                        <div class="space-y-4 font-bold text-gray-800 border-l-4 border-brand-berry pl-4 mb-8">
                             <p id="brand-contact-name" class="font-display text-2xl"></p>
                             <p id="brand-contact-phone" class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-black"></i> <span></span></p>
                             <p id="brand-contact-email" class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-black"></i> <span></span></p>
@@ -253,19 +253,19 @@
 
                         <!-- Horarios -->
                         <div class="mb-8 mt-6">
-                            <p class="flex items-center gap-2 font-bold text-xs uppercase tracking-widest text-white/80 mb-3">
-                                <i data-lucide="clock" class="w-4 h-4 text-white"></i> Horarios de Atención
+                            <p class="flex items-center gap-2 font-bold text-xs uppercase tracking-widest text-gray-500 mb-3">
+                                <i data-lucide="clock" class="w-4 h-4 text-brand-berry"></i> Horarios de Atención
                             </p>
-                            <div id="contact-hours" class="rounded-xl border-2 border-white/25 bg-white/15 px-4 py-2 divide-y divide-white/20 text-white shadow-[3px_3px_0_rgba(0,0,0,0.1)]"></div>
+                            <div id="contact-hours" class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-2 divide-y divide-gray-100 text-gray-800 shadow-sm"></div>
                         </div>
 
-                        <a href="#" id="whatsapp-link" class="px-6 py-3 rounded-xl font-bold text-brand-berry bg-white border-2 border-white hover:bg-[#25D366] hover:border-[#25D366] hover:text-white hover:shadow-[4px_4px_0_rgba(0,0,0,0.15)] transition-all flex items-center justify-center gap-2 w-fit">
+                        <a href="#" id="whatsapp-link" class="px-6 py-3 rounded-xl font-bold text-white bg-brand-berry border-2 border-brand-berry hover:bg-[#25D366] hover:border-[#25D366] hover:shadow-[4px_4px_0_rgba(0,0,0,0.12)] transition-all flex items-center justify-center gap-2 w-fit">
                             <i data-lucide="message-circle" class="w-5 h-5"></i> Escribir por WhatsApp
                         </a>
                     </div>
 
                     <!-- Mapa Leaflet de Huasca de Ocampo -->
-                    <div class="mt-8 md:mt-0 rounded-2xl overflow-hidden border-2 border-white/40 shadow-[4px_4px_0_rgba(0,0,0,0.15)] h-80 md:h-full min-h-[320px]">
+                    <div class="mt-8 md:mt-0 rounded-2xl overflow-hidden border border-gray-200 shadow-md h-80 md:h-full min-h-[320px]">
                         <div id="contact-map" class="w-full h-full"></div>
                     </div>
                 </div>
