@@ -138,10 +138,22 @@
             
             <!-- Hero -->
             <section class="flex flex-col items-center text-center" id="inicio">
-                <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png" alt="Logo de La Artesanal" class="w-44 h-44 mx-auto block md:hidden rounded-full border-4 border-black mb-6 shadow-[4px_4px_0_#111] object-cover bg-white">
+                <!-- Logo móvil con aro de flores -->
+                <div class="relative block md:hidden mb-6 w-52 h-52 mx-auto flex items-center justify-center">
+                    <img src="https://cdn.sassoapps.com/la-artesanal/img/aro.png"
+                         alt="" aria-hidden="true"
+                         class="absolute inset-0 w-full h-full object-contain pointer-events-none select-none drop-shadow-sm">
+                    <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png"
+                         alt="Logo de La Artesanal"
+                         class="relative z-10 w-32 h-32 rounded-full object-cover bg-white shadow-md border-2 border-white">
+                </div>
                 <span class="inline-block px-4 py-1.5 rounded-full bg-brand-berry text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-[3px_3px_0_rgba(177,48,107,0.3)] border-2 border-brand-berry-soft">¡AQUÍ SÍ ES NIEVE ARTESANAL!</span>
                     
                 <div class="relative w-full max-w-3xl">
+                    <!-- Aro de flores detrás del título (desktop) -->
+                    <img src="https://cdn.sassoapps.com/la-artesanal/img/aro.png"
+                         alt="" aria-hidden="true"
+                         class="hidden md:block absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 object-contain opacity-20 pointer-events-none select-none -z-10">
                     <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/pajaritol.png" alt="Ave decorativa" class="absolute -top-6 md:-top-12 -left-4 md:-left-12 w-16 md:w-24 drop-shadow-[0_0_10px_rgba(255,255,255,1)] z-20 -rotate-12 hover:-translate-y-2 hover:rotate-0 transition-transform cursor-pointer">
                     <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/pajarito-r.png" alt="Ave decorativa" class="absolute -top-8 md:-top-10 -right-2 md:-right-4 w-16 md:w-24 drop-shadow-[0_0_10px_rgba(255,255,255,1)] z-20 rotate-12 hover:-translate-y-2 hover:rotate-0 transition-transform cursor-pointer">
                     

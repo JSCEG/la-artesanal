@@ -110,7 +110,11 @@ function renderCategoryFilters() {
     categories.forEach((category) => {
         const button = document.createElement("button");
         button.type = "button";
-        button.className = `px-5 py-2.5 rounded-xl font-bold text-sm transition-all border-2 whitespace-nowrap scroll-snap-align-start ${category === state.category ? 'bg-black text-white border-black shadow-[4px_4px_0px_#111]' : 'bg-white text-black border-black hover:shadow-[4px_4px_0px_#111] hover:-translate-y-1'}`;
+        button.className = `px-5 py-2.5 rounded-full font-bold text-sm transition-all whitespace-nowrap ${
+            category === state.category
+            ? 'bg-brand-berry text-white shadow-[0_4px_14px_rgba(177,48,107,0.35)] scale-105'
+            : 'bg-white text-gray-500 border border-gray-200 hover:border-brand-berry/40 hover:text-brand-berry shadow-sm hover:shadow-md'
+        }`;
         button.textContent = category;
         button.addEventListener("click", () => {
             state.category = category;
