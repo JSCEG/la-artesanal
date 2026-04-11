@@ -302,23 +302,32 @@
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="fixed inset-x-0 bottom-0 bg-brand-cream/95 backdrop-blur-xl border-t-2 border-brand-berry/20 z-[9999] md:hidden flex justify-around items-center pt-3 px-2 pb-6 w-full shadow-[0px_-4px_20px_rgba(177,48,107,0.1)]" id="mobile-bottom-nav">
-        <a href="#inicio" class="flex flex-col items-center p-2 text-brand-wood hover:text-brand-berry transition-colors w-full">
-            <i data-lucide="home" class="w-6 h-6 mb-1 mx-auto"></i>
-            <span class="text-[10px] font-bold text-center block">Inicio</span>
+    <nav class="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 z-[9999] md:hidden flex justify-around items-center pt-2 px-2 pb-6 w-full shadow-[0px_-8px_30px_rgba(0,0,0,0.07)]" id="mobile-bottom-nav">
+
+        <a href="#inicio" class="flex flex-col items-center gap-1 w-full group">
+            <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-berry/10 group-hover:bg-brand-berry/20 transition-colors">
+                <i data-lucide="home" class="w-5 h-5 text-brand-berry"></i>
+            </span>
+            <span class="text-[10px] font-bold text-brand-berry">Inicio</span>
         </a>
-        <a href="#catalogo" class="flex flex-col items-center p-2 text-brand-wood hover:text-brand-berry transition-colors w-full">
-            <i data-lucide="ice-cream" class="w-6 h-6 mb-1 mx-auto"></i>
-            <span class="text-[10px] font-bold text-center block">Catálogo</span>
+
+        <a href="#catalogo" class="flex flex-col items-center gap-1 w-full group">
+            <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-teal/10 group-hover:bg-brand-teal/20 transition-colors">
+                <i data-lucide="ice-cream" class="w-5 h-5 text-brand-teal"></i>
+            </span>
+            <span class="text-[10px] font-bold text-brand-teal">Catálogo</span>
         </a>
 
         <!-- Dynamic Mobile Actions (Cart, Profile, Admin) get injected here -->
         <div id="mobile-dynamic-actions" class="flex justify-around items-center contents"></div>
 
-        <button id="mobile-open-auth" class="flex flex-col items-center p-2 text-brand-wood hover:text-brand-berry transition-colors w-full outline-none">
-            <i data-lucide="user-circle" class="w-6 h-6 mb-1 mx-auto"></i>
-            <span class="text-[10px] font-bold text-center block">Entrar</span>
+        <button id="mobile-open-auth" class="flex flex-col items-center gap-1 w-full outline-none group">
+            <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 group-hover:bg-gray-200 transition-colors">
+                <i data-lucide="user-circle" class="w-5 h-5 text-gray-500"></i>
+            </span>
+            <span class="text-[10px] font-bold text-gray-500">Entrar</span>
         </button>
+
     </nav>
 
     <!-- Product Detail Modal -->
