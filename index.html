@@ -175,45 +175,54 @@
 
 
             <!-- Feed de Novedades -->
-            <section id="novedades" class="scroll-mt-24">
-                <div class="flex flex-col items-center mb-10 text-center">
-                    <h2 class="font-display text-4xl md:text-5xl font-black text-black">Novedades</h2>
+            <section id="novedades" class="scroll-mt-24 relative py-4">
+
+                <!-- Banda de color que cruza por el centro de las tarjetas -->
+                <div class="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-br from-brand-berry/10 to-brand-berry-soft/15 rounded-3xl -z-10"></div>
+
+                <div class="flex flex-col items-center mb-12 text-center">
+                    <h2 class="font-display text-4xl md:text-5xl font-black text-gray-900">Novedades</h2>
                     <div class="w-24 h-2 bg-brand-berry mt-4 rounded-full"></div>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Tarjeta 1 — Berry (fresa) -->
-                    <article class="bg-white border-2 border-brand-berry/20 rounded-2xl shadow-[6px_6px_0_rgba(177,48,107,0.2)] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_rgba(177,48,107,0.4)] hover:border-brand-berry/50 transition-all flex flex-col cursor-pointer">
-                        <img src="./assets/paleta_fresa.png" alt="Paleta de Fresa" class="w-full h-64 object-cover border-b-2 border-brand-berry/20">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- Tarjeta 1 — Fresa -->
+                    <article class="bg-white rounded-3xl shadow-[0_4px_32px_rgba(177,48,107,0.12)] hover:shadow-[0_8px_40px_rgba(177,48,107,0.22)] hover:-translate-y-2 transition-all duration-300 flex flex-col cursor-pointer overflow-hidden">
+                        <img src="./assets/paleta_fresa.png" alt="Paleta de Fresa" class="w-full h-56 object-cover">
                         <div class="p-6 flex-1 flex flex-col">
-                            <span class="text-xs font-bold uppercase tracking-widest text-brand-berry mb-2 border-2 border-brand-berry/40 px-2 py-1 bg-brand-berry/5 w-fit rounded-full">Temporada</span>
-                            <h3 class="font-display text-2xl font-black text-brand-wood mb-3 leading-tight">La Fresa Perfecta</h3>
-                            <p class="text-brand-wood-soft font-medium text-sm leading-relaxed mb-4">Nueva cosecha de fresas michoacanas molidas artesanalmente para nuestro clásico sabor rojo.</p>
-                            <span class="text-brand-wood/40 font-bold text-xs mt-auto">Hace 2 días</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-white bg-brand-berry px-3 py-1 rounded-full w-fit mb-4">Temporada</span>
+                            <h3 class="font-display text-xl font-black text-gray-900 mb-2 leading-tight">La Fresa Perfecta</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed mb-4">Nueva cosecha de fresas michoacanas molidas artesanalmente para nuestro clásico sabor rojo.</p>
+                            <hr class="border-gray-100 mb-4">
+                            <span class="text-gray-400 font-bold text-xs mt-auto">Hace 2 días</span>
                         </div>
                     </article>
 
-                    <!-- Tarjeta 2 — Teal (mango) -->
-                    <article class="bg-white border-2 border-brand-teal/20 rounded-2xl shadow-[6px_6px_0_rgba(45,102,128,0.2)] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_rgba(45,102,128,0.4)] hover:border-brand-teal/50 transition-all flex flex-col cursor-pointer">
-                        <img src="./assets/paleta_mango.png" alt="Paleta de Mango" class="w-full h-64 object-cover border-b-2 border-brand-teal/20">
+                    <!-- Tarjeta 2 — Mango -->
+                    <article class="bg-white rounded-3xl shadow-[0_4px_32px_rgba(45,102,128,0.12)] hover:shadow-[0_8px_40px_rgba(45,102,128,0.22)] hover:-translate-y-2 transition-all duration-300 flex flex-col cursor-pointer overflow-hidden">
+                        <img src="./assets/paleta_mango.png" alt="Paleta de Mango" class="w-full h-56 object-cover">
                         <div class="p-6 flex-1 flex flex-col">
-                            <span class="text-xs font-bold uppercase tracking-widest text-brand-teal mb-2 border-2 border-brand-teal/40 px-2 py-1 bg-brand-teal/5 w-fit rounded-full">Receta</span>
-                            <h3 class="font-display text-2xl font-black text-brand-wood mb-3 leading-tight">Mango con toque único</h3>
-                            <p class="text-brand-wood-soft font-medium text-sm leading-relaxed mb-4">El rey del calor aterrizó; un estallido de color amarillo vibrante en cada bocado.</p>
-                            <span class="text-brand-wood/40 font-bold text-xs mt-auto">Hace 1 semana</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-white bg-brand-teal px-3 py-1 rounded-full w-fit mb-4">Receta</span>
+                            <h3 class="font-display text-xl font-black text-gray-900 mb-2 leading-tight">Mango con toque único</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed mb-4">El rey del calor aterrizó; un estallido de color amarillo vibrante en cada bocado.</p>
+                            <hr class="border-gray-100 mb-4">
+                            <span class="text-gray-400 font-bold text-xs mt-auto">Hace 1 semana</span>
                         </div>
                     </article>
 
-                    <!-- Tarjeta 3 — Coral (evento) -->
-                    <article class="bg-white border-2 border-brand-coral/20 rounded-2xl shadow-[6px_6px_0_rgba(235,121,111,0.25)] overflow-hidden hover:-translate-y-2 hover:shadow-[8px_8px_0_rgba(235,121,111,0.45)] hover:border-brand-coral/50 transition-all flex flex-col cursor-pointer">
-                        <img src="./assets/carrito_evento.png" alt="Carrito de Eventos" class="w-full h-64 object-cover border-b-2 border-brand-coral/20">
+                    <!-- Tarjeta 3 — Evento -->
+                    <article class="bg-white rounded-3xl shadow-[0_4px_32px_rgba(235,121,111,0.12)] hover:shadow-[0_8px_40px_rgba(235,121,111,0.22)] hover:-translate-y-2 transition-all duration-300 flex flex-col cursor-pointer overflow-hidden">
+                        <img src="./assets/carrito_evento.png" alt="Carrito de Eventos" class="w-full h-56 object-cover">
                         <div class="p-6 flex-1 flex flex-col">
-                            <span class="text-xs font-bold uppercase tracking-widest text-brand-coral mb-2 border-2 border-brand-coral/40 px-2 py-1 bg-brand-coral/5 w-fit rounded-full">Noticia</span>
-                            <h3 class="font-display text-2xl font-black text-brand-wood mb-3 leading-tight">Llevamos el carrito</h3>
-                            <p class="text-brand-wood-soft font-medium text-sm leading-relaxed mb-4">Estuvimos refrescando el verano con nuestro estante minimalista corporativo. ¡Pídelo!</p>
-                            <span class="text-brand-wood/40 font-bold text-xs mt-auto">Hace 1 mes</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-white bg-brand-coral px-3 py-1 rounded-full w-fit mb-4">Noticia</span>
+                            <h3 class="font-display text-xl font-black text-gray-900 mb-2 leading-tight">Llevamos el carrito</h3>
+                            <p class="text-gray-500 text-sm leading-relaxed mb-4">Estuvimos refrescando el verano con nuestro estante minimalista corporativo. ¡Pídelo!</p>
+                            <hr class="border-gray-100 mb-4">
+                            <span class="text-gray-400 font-bold text-xs mt-auto">Hace 1 mes</span>
                         </div>
                     </article>
+
                 </div>
             </section>
 
