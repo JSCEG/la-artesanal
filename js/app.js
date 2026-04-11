@@ -169,10 +169,10 @@ function renderCatalog() {
         const track = rowSection.querySelector("div:nth-of-type(2)");
 
         const categoryColors = {
-            "Favoritos":        { bg: "#b1306b", shadow: "rgba(177,48,107,0.35)"  },
-            "Sabores de Agua":  { bg: "#2d6680", shadow: "rgba(45,102,128,0.35)"  },
-            "Helados de Crema": { bg: "#c07a3e", shadow: "rgba(192,122,62,0.35)"  },
-            "Licor":            { bg: "#7c4fa0", shadow: "rgba(124,79,160,0.35)"  },
+            "Favoritos":        { bg: "#fce4ef", shadow: "rgba(177,48,107,0.15)",  accent: "#b1306b" },
+            "Sabores de Agua":  { bg: "#d6edf5", shadow: "rgba(45,102,128,0.15)",  accent: "#2d6680" },
+            "Helados de Crema": { bg: "#fde8cc", shadow: "rgba(192,122,62,0.15)",  accent: "#c07a3e" },
+            "Licor":            { bg: "#ecdff5", shadow: "rgba(124,79,160,0.15)",  accent: "#7c4fa0" },
         };
 
         catProducts.forEach(product => {
@@ -185,8 +185,8 @@ function renderCatalog() {
             if (["Helados de Crema","Favoritos"].includes(product.category)) imgSrc = "./assets/bolita_nieve.png";
 
             const priceHtml = visiblePrice === null
-                ? `<p class="text-white/60 text-xs italic font-medium">Inicia sesión para ver precio</p>`
-                : `<p class="font-display text-2xl font-black text-white">${formatCurrency(visiblePrice)}</p>`;
+                ? `<p class="text-gray-400 text-xs italic font-medium">Inicia sesión para ver precio</p>`
+                : `<p class="font-display text-2xl font-black" style="color:${col.accent}">${formatCurrency(visiblePrice)}</p>`;
 
             article.className = "snap-center shrink-0 w-56 flex flex-col items-center cursor-pointer group";
             article.innerHTML = `
@@ -195,24 +195,25 @@ function renderCatalog() {
                             shadow-[0_8px_24px_rgba(0,0,0,0.12)] border-4 border-white
                             group-hover:-translate-y-2 transition-transform duration-300">
                     <img src="${imgSrc}" alt="${product.name}"
-                         class="w-24 h-24 object-contain pointer-events-none">
+                         class="w-32 h-32 object-contain pointer-events-none">
                 </div>
-                <!-- Card body con color -->
+                <!-- Card body pastel -->
                 <div class="w-full rounded-3xl -mt-14 pt-16 pb-7 px-5 text-center flex flex-col items-center gap-3
                             transition-all duration-300 group-hover:-translate-y-1"
                      style="background:${col.bg}; box-shadow: 0 8px 24px ${col.shadow}">
-                    <h4 class="font-display text-lg font-black text-white uppercase tracking-wide leading-tight">${product.name}</h4>
+                    <h4 class="font-display text-lg font-black uppercase tracking-wide leading-tight"
+                        style="color:${col.accent}">${product.name}</h4>
                     <div class="flex gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-white/50"></span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+                        <span class="w-1.5 h-1.5 rounded-full opacity-40" style="background:${col.accent}"></span>
+                        <span class="w-1.5 h-1.5 rounded-full opacity-70" style="background:${col.accent}"></span>
+                        <span class="w-1.5 h-1.5 rounded-full opacity-40" style="background:${col.accent}"></span>
                     </div>
-                    <p class="text-white/80 text-xs font-medium leading-relaxed line-clamp-3">${product.description}</p>
+                    <p class="text-gray-500 text-xs font-medium leading-relaxed line-clamp-3">${product.description}</p>
                     ${priceHtml}
                     <button type="button"
                             class="mt-1 w-10 h-10 bg-white rounded-full flex items-center justify-center
                                    shadow-md hover:scale-110 active:scale-95 transition-transform"
-                            style="color:${col.bg}" aria-label="Agregar al carrito">
+                            style="color:${col.accent}" aria-label="Agregar al carrito">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor" stroke-width="2.5"
                              stroke-linecap="round" stroke-linejoin="round">
