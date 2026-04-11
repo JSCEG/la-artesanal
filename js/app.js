@@ -50,10 +50,22 @@ const els = {
     signupButton: document.querySelector("#signup-button"),
     mainNav: document.querySelector("#main-nav"),
     mainActions: document.querySelector("#main-actions"),
-    mobileDynamicActions: document.querySelector("#mobile-dynamic-actions"),
-    mobileOpenAuth: document.querySelector("#mobile-open-auth"),
+    mobileSlot3: document.querySelector("#mobile-slot3"),
+    mobileAuthAction: document.querySelector("#mobile-auth-action"),
     mobileSearchInput: document.querySelector("#mobile-search-input")
 };
+
+function syncMobileNavActive() {
+    const nav = document.getElementById("mobile-bottom-nav");
+    if (!nav) return;
+    const hash = window.location.hash || "#inicio";
+    nav.querySelectorAll("[data-nav]").forEach((el) => {
+        const target = el.getAttribute("data-nav");
+        if (!target) return;
+        if (hash === target || hash.startsWith(target)) el.setAttribute("aria-current", "page");
+        else el.removeAttribute("aria-current");
+    });
+}
 
 function formatCurrency(value) {
     return new Intl.NumberFormat("es-MX", {
@@ -193,12 +205,12 @@ function renderCatalog() {
                 5:  "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=300&h=300&fit=crop&auto=format", // cono mango naranja
                 6:  "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=300&h=300&fit=crop&auto=format", // scoops coloridos — maracuyá
                 7:  "https://images.unsplash.com/photo-1560008581-09826d1de69e?w=300&h=300&fit=crop&auto=format", // limón cítrico
-                8:  "https://images.unsplash.com/photo-1580915411954-282cb3fc8b5f?w=300&h=300&fit=crop&auto=format", // crema blanca — guanábana
-                9:  "https://images.unsplash.com/photo-1557142046-c704a3adf364?w=300&h=300&fit=crop&auto=format", // helado leche vainilla
-                10: "https://images.unsplash.com/photo-1559703248-dcaaec9fab78?w=300&h=300&fit=crop&auto=format", // cacahuate/mazapán
+                8:  IMGS.paletaLeche, // guanábana (sin foto propia)
+                9:  IMGS.heladoLeche,
+                10: IMGS.heladoMazapan,
                 11: "https://images.unsplash.com/photo-1608228088998-57828365d486?w=300&h=300&fit=crop&auto=format", // cajeta caramelo
-                12: "https://images.unsplash.com/photo-1516559828984-686a0a76f153?w=300&h=300&fit=crop&auto=format", // mamey rosado
-                13: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=300&h=300&fit=crop&auto=format", // coco
+                12: IMGS.heladoMamey,
+                13: IMGS.heladoCoco,
                 14: "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=300&h=300&fit=crop&auto=format", // chocolate oscuro
                 15: "https://images.unsplash.com/photo-1600718374662-0483d2b9da44?w=300&h=300&fit=crop&auto=format", // pistache verde
                 16: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=300&h=300&fit=crop&auto=format", // tropical piña
@@ -270,11 +282,11 @@ function openProductModal(product) {
         6:  "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=400&h=400&fit=crop&auto=format",
         7:  "https://images.unsplash.com/photo-1629385701021-fec4e4f73f87?w=400&h=400&fit=crop&auto=format",
         8:  "https://images.unsplash.com/photo-1519735777090-ec97162dc266?w=400&h=400&fit=crop&auto=format",
-        9:  "https://images.unsplash.com/photo-1580915411954-282cb3fc8b5f?w=400&h=400&fit=crop&auto=format",
-        10: "https://images.unsplash.com/photo-1559703248-dcaaec9fab78?w=400&h=400&fit=crop&auto=format",
+        9:  IMGS.heladoLeche,
+        10: IMGS.heladoMazapan,
         11: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=400&fit=crop&auto=format",
-        12: "https://images.unsplash.com/photo-1516559828984-686a0a76f153?w=400&h=400&fit=crop&auto=format",
-        13: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=400&h=400&fit=crop&auto=format",
+        12: IMGS.heladoMamey,
+        13: IMGS.heladoCoco,
         14: "https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=400&h=400&fit=crop&auto=format",
         15: "https://images.unsplash.com/photo-1600718374662-0483d2b9da44?w=400&h=400&fit=crop&auto=format",
         16: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=400&fit=crop&auto=format",
@@ -388,42 +400,81 @@ function renderNavigation() {
         });
     }
 
-    // Mobile Bottom Nav
-    if (isGuest) {
-        els.mobileDynamicActions.innerHTML = ``;
-        if (els.mobileOpenAuth) els.mobileOpenAuth.classList.remove("hidden");
-    } else {
-        if (els.mobileOpenAuth) els.mobileOpenAuth.classList.add("hidden");
-        els.mobileDynamicActions.innerHTML = `
-            ${isWholesale ? `
-                <a href="#pedidos" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors">
-                    <div class="relative">
-                        <i data-lucide="shopping-cart" class="w-6 h-6 mb-1"></i>
-                        ${cartCount > 0 ? `<span class="absolute -top-1 -right-2 bg-brand-berry text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shadow-sm">${cartCount}</span>` : ""}
-                    </div>
-                    <span class="text-[10px] font-bold">Carrito</span>
-                </a>
-            ` : ""}
-            ${isAdmin ? `
-                <a href="#admin" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors">
-                    <i data-lucide="bar-chart-2" class="w-6 h-6 mb-1"></i>
-                    <span class="text-[10px] font-bold">Admin</span>
-                </a>
-            ` : ""}
-            <button id="mobile-logout-btn" class="flex flex-col items-center p-2 text-black hover:text-brand-berry transition-colors">
-                <i data-lucide="log-out" class="w-6 h-6 mb-1"></i>
-                <span class="text-[10px] font-bold">Salir</span>
-            </button>
-        `;
-        document.getElementById("mobile-logout-btn")?.addEventListener("click", () => {
-             if (supabaseEnabled && supabase) supabase.auth.signOut();
-             else setSession("publico");
-        });
+    if (els.mobileSlot3) {
+        if (isAdmin) {
+            els.mobileSlot3.href = "#admin";
+            els.mobileSlot3.setAttribute("data-nav", "#admin");
+            els.mobileSlot3.setAttribute("aria-label", "Admin");
+            els.mobileSlot3.innerHTML = `
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-brand-berry"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Admin</span>
+                <span class="mobile-nav-dot bg-brand-berry"></span>
+            `;
+        } else if (isWholesale) {
+            els.mobileSlot3.href = "#pedidos";
+            els.mobileSlot3.setAttribute("data-nav", "#pedidos");
+            els.mobileSlot3.setAttribute("aria-label", "Carrito");
+            els.mobileSlot3.innerHTML = `
+                <span class="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 text-brand-berry"></i>
+                    ${cartCount > 0 ? `<span class="absolute -top-1 -right-1 bg-brand-berry text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-black shadow-sm">${cartCount}</span>` : ""}
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Carrito</span>
+                <span class="mobile-nav-dot bg-brand-berry"></span>
+            `;
+        } else {
+            els.mobileSlot3.href = "#novedades";
+            els.mobileSlot3.setAttribute("data-nav", "#novedades");
+            els.mobileSlot3.setAttribute("aria-label", "Novedades");
+            els.mobileSlot3.innerHTML = `
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-brand-berry-soft"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Novedades</span>
+                <span class="mobile-nav-dot bg-brand-berry-soft"></span>
+            `;
+        }
+    }
+
+    if (els.mobileAuthAction) {
+        const btn = els.mobileAuthAction;
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        els.mobileAuthAction = newBtn;
+
+        if (isGuest) {
+            els.mobileAuthAction.setAttribute("aria-label", "Entrar");
+            els.mobileAuthAction.innerHTML = `
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-gray-500"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Entrar</span>
+                <span class="mobile-nav-dot bg-gray-400"></span>
+            `;
+            els.mobileAuthAction.addEventListener("click", () => els.authDialog.showModal());
+        } else {
+            els.mobileAuthAction.setAttribute("aria-label", "Salir");
+            els.mobileAuthAction.innerHTML = `
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="log-out" class="w-5 h-5 text-brand-wood"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Salir</span>
+                <span class="mobile-nav-dot bg-brand-wood-soft"></span>
+            `;
+            els.mobileAuthAction.addEventListener("click", () => {
+                if (supabaseEnabled && supabase) supabase.auth.signOut();
+                else setSession("publico");
+            });
+        }
     }
 
     if (window.lucide) {
         window.lucide.createIcons();
     }
+
+    syncMobileNavActive();
 }
 
 function renderMetrics() {
@@ -707,7 +758,6 @@ function attachEvents() {
     
     // Auth modals & basic handlers
     if(els.openAuth) els.openAuth.addEventListener("click", () => els.authDialog.showModal());
-    if(els.mobileOpenAuth) els.mobileOpenAuth.addEventListener("click", () => els.authDialog.showModal());
     
     els.loginButton.addEventListener("click", handleLogin);
     els.signupButton.addEventListener("click", handleSignup);
@@ -727,6 +777,8 @@ function attachEvents() {
             });
         });
     }
+
+    window.addEventListener("hashchange", syncMobileNavActive);
 }
 
 function renderAll() {

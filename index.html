@@ -31,7 +31,7 @@
           --font-sans: "Inter", sans-serif;
         }
 
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; overflow-x: hidden; }
 
         body {
             font-family: var(--font-sans);
@@ -79,6 +79,48 @@
                        rounded-full hover:border-brand-berry hover:text-brand-berry
                        transition-colors cursor-pointer;
             }
+
+            .logo-glass {
+                background: rgba(248, 240, 223, 0.65);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border: 1px solid rgba(177, 48, 107, 0.35);
+                box-shadow: 0 10px 26px rgba(177,48,107,0.14), 0 2px 10px rgba(0,0,0,0.06);
+            }
+
+            .mobile-nav-wrap {
+                padding-bottom: calc(env(safe-area-inset-bottom) + 0.25rem);
+            }
+
+            .mobile-nav-shell {
+                background: rgba(255, 255, 255, 0.88);
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
+                border: 1px solid rgba(0, 0, 0, 0.06);
+                box-shadow: 0 12px 40px rgba(0,0,0,0.10), 0 2px 10px rgba(0,0,0,0.06);
+            }
+
+            .mobile-nav-item {
+                @apply flex flex-col items-center justify-center flex-1 min-w-0 gap-1 rounded-2xl py-2 px-1 outline-none transition-colors;
+            }
+
+            .mobile-nav-item[aria-current="page"] {
+                background: rgba(0, 0, 0, 0.06);
+            }
+
+            .mobile-nav-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 9999px;
+                opacity: 0;
+                transform: scale(0.7);
+                transition: opacity 180ms ease, transform 180ms ease;
+            }
+
+            .mobile-nav-item[aria-current="page"] .mobile-nav-dot {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
     </style>
 </head>
@@ -91,8 +133,10 @@
             <!-- Logo -->
             <div class="hidden md:flex items-center shrink-0">
                 <a href="#inicio" class="flex items-center group">
-                    <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png" alt="Logo de La Artesanal"
-                         class="w-14 h-14 rounded-full border-2 border-white/60 hover:scale-105 transition-transform bg-white shadow-sm">
+                    <span class="logo-glass rounded-full p-1.5">
+                        <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png" alt="Logo de La Artesanal"
+                             class="w-16 h-16 rounded-full border border-white/60 bg-white/80 hover:scale-105 transition-transform shadow-sm">
+                    </span>
                 </a>
             </div>
 
@@ -114,8 +158,10 @@
 
             <!-- Mobile: logo + search -->
             <a href="#inicio" class="flex md:hidden items-center shrink-0">
-                <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png" alt="Logo"
-                     class="w-10 h-10 rounded-full border border-white/60 bg-white shadow-sm">
+                <span class="logo-glass rounded-full p-1">
+                    <img src="https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png" alt="Logo"
+                         class="w-12 h-12 rounded-full border border-white/60 bg-white/80 shadow-sm">
+                </span>
             </a>
             <div class="flex md:hidden relative flex-1">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
@@ -171,13 +217,13 @@
                 </div>
 
                 <!-- Galería hero: paletas flotantes -->
-                <div class="w-full max-w-4xl relative flex items-end justify-center gap-3 md:gap-5 h-56 md:h-72 select-none pointer-events-none">
+                <div class="w-full max-w-4xl relative flex items-end justify-center gap-2 sm:gap-3 md:gap-5 h-56 md:h-72 select-none pointer-events-none overflow-hidden px-1">
                     <!-- paleta 1 -->
                     <div class="shrink-0 w-28 md:w-36 h-44 md:h-56 rounded-2xl overflow-hidden shadow-xl -rotate-6 translate-y-4 border-2 border-white/60">
                         <img src="https://images.unsplash.com/photo-1488900128323-21503983a07e?w=300&h=400&fit=crop&auto=format" alt="Paleta" class="w-full h-full object-cover">
                     </div>
                     <!-- paleta 2 -->
-                    <div class="shrink-0 w-28 md:w-36 h-48 md:h-64 rounded-2xl overflow-hidden shadow-xl rotate-2 translate-y-2 border-2 border-white/60">
+                    <div class="hidden sm:block shrink-0 w-28 md:w-36 h-48 md:h-64 rounded-2xl overflow-hidden shadow-xl rotate-2 translate-y-2 border-2 border-white/60">
                         <img src="https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&h=400&fit=crop&auto=format" alt="Helado" class="w-full h-full object-cover">
                     </div>
                     <!-- paleta central (más grande) -->
@@ -361,32 +407,40 @@
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 z-[9999] md:hidden flex justify-around items-center pt-2 px-2 pb-6 w-full shadow-[0px_-8px_30px_rgba(0,0,0,0.07)]" id="mobile-bottom-nav">
+    <nav class="fixed bottom-3 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-[calc(100%-1rem)] max-w-md mobile-nav-wrap" id="mobile-bottom-nav">
+        <div class="mobile-nav-shell rounded-3xl px-2 py-2 flex items-center gap-1">
+            <a href="#inicio" data-nav="#inicio" class="mobile-nav-item" aria-label="Inicio">
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="home" class="w-5 h-5 text-brand-berry"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Inicio</span>
+                <span class="mobile-nav-dot bg-brand-berry"></span>
+            </a>
 
-        <a href="#inicio" class="flex flex-col items-center gap-1 w-full group">
-            <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-berry/10 group-hover:bg-brand-berry/20 transition-colors">
-                <i data-lucide="home" class="w-5 h-5 text-brand-berry"></i>
-            </span>
-            <span class="text-[10px] font-bold text-brand-berry">Inicio</span>
-        </a>
+            <a href="#catalogo" data-nav="#catalogo" class="mobile-nav-item" aria-label="Catálogo">
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="ice-cream" class="w-5 h-5 text-brand-teal"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Catálogo</span>
+                <span class="mobile-nav-dot bg-brand-teal"></span>
+            </a>
 
-        <a href="#catalogo" class="flex flex-col items-center gap-1 w-full group">
-            <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-teal/10 group-hover:bg-brand-teal/20 transition-colors">
-                <i data-lucide="ice-cream" class="w-5 h-5 text-brand-teal"></i>
-            </span>
-            <span class="text-[10px] font-bold text-brand-teal">Catálogo</span>
-        </a>
+            <a id="mobile-slot3" href="#novedades" data-nav="#novedades" class="mobile-nav-item" aria-label="Novedades">
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-brand-berry-soft"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Novedades</span>
+                <span class="mobile-nav-dot bg-brand-berry-soft"></span>
+            </a>
 
-        <!-- Dynamic Mobile Actions (Cart, Profile, Admin) get injected here -->
-        <div id="mobile-dynamic-actions" class="flex justify-around items-center contents"></div>
-
-        <button id="mobile-open-auth" class="flex flex-col items-center gap-1 w-full outline-none group">
-            <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 group-hover:bg-gray-200 transition-colors">
-                <i data-lucide="user-circle" class="w-5 h-5 text-gray-500"></i>
-            </span>
-            <span class="text-[10px] font-bold text-gray-500">Entrar</span>
-        </button>
-
+            <button id="mobile-auth-action" type="button" class="mobile-nav-item" aria-label="Entrar">
+                <span class="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-gray-500"></i>
+                </span>
+                <span class="text-[10px] font-black tracking-wide text-brand-wood/80">Entrar</span>
+                <span class="mobile-nav-dot bg-gray-400"></span>
+            </button>
+        </div>
     </nav>
 
     <!-- Product Detail Modal -->
