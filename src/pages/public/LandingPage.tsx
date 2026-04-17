@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import CatalogRow from '../../components/CatalogRow'
@@ -68,8 +68,16 @@ export default function LandingPage() {
   const [busqueda, setBusqueda]   = useState('')
   const [modalLogin, setModalLogin] = useState(false)
   const [glow, setGlow] = useState<CSSProperties>({})
+  const [activeHash, setActiveHash] = useState<string>(() => window.location.hash || '#inicio')
   const navigate = useNavigate()
   const toast = useToast()
+
+  useEffect(() => {
+    const onHashChange = () => setActiveHash(window.location.hash || '#inicio')
+    onHashChange()
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   const filtrados = productos.filter(p => {
     const matchCat = categoria === 'Todos' || p.category === categoria
@@ -378,29 +386,33 @@ export default function LandingPage() {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-[calc(100%-1rem)] max-w-md mobile-nav-wrap">
         <div className="mobile-nav-shell rounded-3xl px-2 py-2 flex items-center gap-1">
-          <a href="#inicio" className="mobile-nav-item">
+          <a href="#inicio" data-nav="#inicio" aria-current={activeHash === '#inicio' ? 'page' : undefined} className="mobile-nav-item" aria-label="Inicio">
             <span className="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-berry" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </span>
             <span className="text-[10px] font-black tracking-wide text-brand-wood/80">Inicio</span>
+            <span className="mobile-nav-dot bg-brand-berry" />
           </a>
-          <a href="#catalogo" className="mobile-nav-item">
+          <a href="#catalogo" data-nav="#catalogo" aria-current={activeHash === '#catalogo' ? 'page' : undefined} className="mobile-nav-item" aria-label="Catálogo">
             <span className="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7Z"/><path d="m7 22 5-5 5 5"/></svg>
             </span>
             <span className="text-[10px] font-black tracking-wide text-brand-wood/80">Catálogo</span>
+            <span className="mobile-nav-dot bg-brand-teal" />
           </a>
-          <a href="#novedades" className="mobile-nav-item">
+          <a href="#novedades" data-nav="#novedades" aria-current={activeHash === '#novedades' ? 'page' : undefined} className="mobile-nav-item" aria-label="Novedades">
             <span className="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-berry-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
             </span>
             <span className="text-[10px] font-black tracking-wide text-brand-wood/80">Novedades</span>
+            <span className="mobile-nav-dot bg-brand-berry-soft" />
           </a>
-          <button type="button" onClick={() => session ? navigate('/cuenta') : navigate('/login')} className="mobile-nav-item">
+          <button type="button" onClick={() => session ? navigate('/cuenta') : navigate('/login')} className="mobile-nav-item" aria-label={session ? 'Cuenta' : 'Entrar'}>
             <span className="flex items-center justify-center w-11 h-11 rounded-2xl bg-white shadow-sm border border-black/5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.66a8 8 0 0 1 10 0"/></svg>
             </span>
             <span className="text-[10px] font-black tracking-wide text-brand-wood/80">{session ? 'Cuenta' : 'Entrar'}</span>
+            <span className="mobile-nav-dot bg-gray-400" />
           </button>
         </div>
       </nav>

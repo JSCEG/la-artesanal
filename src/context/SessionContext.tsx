@@ -59,8 +59,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     })
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut({ scope: 'local' })
+    } catch {
+    }
+    setSession(null)
     setProfile(null)
+    setLoading(false)
   }
 
   const isAdmin = profile?.role === 'admin'

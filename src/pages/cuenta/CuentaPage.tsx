@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSession } from '../../hooks/useSession'
 import Navbar from '../../components/Navbar'
 import { getPedidos, calcularTotal } from '../../services/pedidos'
 import type { Pedido, EstatusPedido } from '../../services/pedidos'
 import { supabase } from '../../services/supabase'
+import { CardSkeleton } from '../../components/admin/Skeleton'
+import EmptyState from '../../components/admin/EmptyState'
+import { useToast } from '../../context/ToastContext'
 
 // ─── Estatus visual ───────────────────────────────────────────────────────────
 
 const ESTATUS_CFG: Record<EstatusPedido, { label: string; badge: string }> = {
-  borrador:   { label: 'Borrador',   badge: 'bg-gray-100 text-gray-500'      },
-  confirmado: { label: 'Confirmado', badge: 'bg-blue-100 text-blue-700'       },
-  en_ruta:    { label: 'En ruta',    badge: 'bg-amber-100 text-amber-700'     },
-  entregado:  { label: 'Entregado',  badge: 'bg-green-100 text-green-700'     },
-  cancelado:  { label: 'Cancelado',  badge: 'bg-red-100 text-red-500'         },
+  borrador:   { label: 'Borrador',   badge: 'bg-brand-wood/5 text-brand-wood-soft border-brand-wood/15' },
+  confirmado: { label: 'Confirmado', badge: 'bg-brand-teal/10 text-brand-teal border-brand-teal/30'     },
+  en_ruta:    { label: 'En ruta',    badge: 'bg-brand-coral/15 text-brand-coral border-brand-coral/30'  },
+  entregado:  { label: 'Entregado',  badge: 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'  },
+  cancelado:  { label: 'Cancelado',  badge: 'bg-gray-100 text-gray-500 border-gray-200'                 },
 }
 
 function fmt(n: number) {
@@ -31,204 +34,278 @@ function fmtFecha(iso: string) {
 export default function CuentaPage() {
   const { profile, session, signOut } = useSession()
   const navigate = useNavigate()
+  const toast = useToast()
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [loadingPedidos, setLoadingPedidos] = useState(true)
-  const [pedidosOpen, setPedidosOpen] = useState(false)
+  const [filtroEstatus, setFiltroEstatus] = useState<EstatusPedido | 'todos'>('todos')
+  const [busqueda, setBusqueda] = useState('')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   async function fetchPedidos() {
-    const data = await getPedidos()
-    setPedidos(data)
-    setLoadingPedidos(false)
+    if (!session?.user) {
+      setPedidos([])
+      setLoadingPedidos(false)
+      return
+    }
+    setLoadingPedidos(true)
+    try {
+      const data = await getPedidos()
+      setPedidos(data)
+    } catch {
+      toast.error('No se pudieron cargar tus pedidos')
+    } finally {
+      setLoadingPedidos(false)
+    }
   }
 
   useEffect(() => {
-    fetchPedidos()
+    let active = true
+    ;(async () => {
+      await fetchPedidos()
+    })()
 
-    // Suscripción en tiempo real — si el admin cambia el estatus, la cliente lo ve al instante
+    if (!session?.user) return () => { active = false }
+
     const channel = supabase
-      .channel('cuenta-pedidos')
+      .channel(`cuenta-pedidos-${session.user.id}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'pedidos' },
-        () => { fetchPedidos() }
+        { event: '*', schema: 'public', table: 'pedidos', filter: `created_by=eq.${session.user.id}` },
+        () => { if (active) fetchPedidos() }
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
-  }, [])
+    return () => {
+      active = false
+      supabase.removeChannel(channel)
+    }
+  }, [session?.user?.id])
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
   }
 
+  const metricas = useMemo(() => {
+    const pendientes = pedidos.filter(p => p.estatus === 'confirmado' || p.estatus === 'en_ruta')
+    const entregados = pedidos.filter(p => p.estatus === 'entregado')
+    const total = pedidos.reduce((s, p) => s + calcularTotal(p.detalle ?? []), 0)
+    return {
+      totalCount: pedidos.length,
+      pendientesCount: pendientes.length,
+      entregadosCount: entregados.length,
+      totalMonto: total,
+    }
+  }, [pedidos])
+
+  const filtrados = useMemo(() => pedidos.filter(p => {
+    const estatusOk = filtroEstatus === 'todos' || p.estatus === filtroEstatus
+    const q = busqueda.trim().toLowerCase()
+    if (!q) return estatusOk
+    const suc = (p.sucursal?.nombre_sucursal ?? '').toLowerCase()
+    const notas = (p.notas ?? '').toLowerCase()
+    return estatusOk && (suc.includes(q) || notas.includes(q) || p.id.toLowerCase().includes(q))
+  }), [pedidos, filtroEstatus, busqueda])
+
+  const hayFiltro = filtroEstatus !== 'todos' || busqueda.trim() !== ''
+
   return (
     <div className="min-h-screen bg-brand-cream">
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8 md:py-12 space-y-6">
 
-        {/* Perfil Card — Glass */}
-        <div className="bg-white/90 backdrop-blur-lg rounded-[2rem] border border-white/60 shadow-[0_8px_32px_rgba(177,48,107,0.08)] p-6 md:p-8">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center flex-shrink-0 font-black text-2xl md:text-3xl text-white ${
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="font-display text-2xl md:text-3xl font-black text-brand-wood">Mi cuenta</h1>
+            <p className="text-sm text-brand-wood-soft font-medium mt-1">
+              {profile?.full_name ?? '—'} · {session?.user?.email ?? '—'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/#catalogo" className="btn-secondary !py-2 !px-4 text-sm">Ver catálogo</Link>
+            <button onClick={handleSignOut} className="btn-primary !py-2 !px-4 text-sm">Salir</button>
+          </div>
+        </div>
+
+        <div className="bg-white border border-brand-wood/10 rounded-2xl p-5 md:p-6 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
+          <div className="flex items-center gap-4">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 font-black text-xl text-white ${
               profile?.commercial_profile === 'mayorista'
                 ? 'bg-gradient-to-br from-brand-teal to-brand-teal-soft'
                 : 'bg-gradient-to-br from-brand-berry to-brand-berry-soft'
             }`}>
               {profile?.full_name?.[0]?.toUpperCase() ?? '?'}
             </div>
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="font-display text-2xl md:text-3xl font-black text-brand-wood">
-                {profile?.full_name}
-              </h1>
-              <div className="flex items-center gap-3 mt-3 justify-center md:justify-start flex-wrap">
-                <span className={`text-xs font-black px-3 py-1.5 rounded-full border-2 ${
-                  profile?.commercial_profile === 'mayorista'
-                    ? 'bg-brand-teal/10 text-brand-teal border-brand-teal/30'
-                    : 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'
-                }`}>
-                  {profile?.commercial_profile === 'mayorista' ? '🏪 Mayorista' : '🛒 Minorista'}
-                </span>
-                <span className="text-xs font-medium text-brand-wood-soft">
-                  {session?.user?.email}
-                </span>
-              </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-black uppercase tracking-widest text-brand-wood-soft">Perfil comercial</p>
+              <p className="font-bold text-brand-wood mt-1 truncate">
+                {profile?.commercial_profile === 'mayorista' ? 'Mayorista' : 'Minorista'}
+              </p>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6 border-t border-brand-wood/10">
-            <Link to="/#catalogo"
-              className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-brand-berry/5 to-transparent border border-brand-berry/20 hover:border-brand-berry/40 hover:shadow-[0_4px_16px_rgba(177,48,107,0.12)] transition-all group">
-              <span className="font-bold text-brand-wood group-hover:text-brand-berry transition-colors">Ver catálogo</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-brand-berry/60 group-hover:text-brand-berry group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </Link>
-
-            <button onClick={handleSignOut}
-              className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-red-500/5 to-transparent border border-red-200/30 hover:border-red-300 hover:shadow-[0_4px_16px_rgba(239,68,68,0.08)] transition-all group">
-              <span className="font-bold text-brand-wood group-hover:text-red-600 transition-colors">Cerrar sesión</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-            </button>
+            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${
+              profile?.commercial_profile === 'mayorista'
+                ? 'bg-brand-teal/10 text-brand-teal border-brand-teal/30'
+                : 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'
+            }`}>
+              {profile?.commercial_profile === 'mayorista' ? '🏪' : '🛒'}
+            </span>
           </div>
         </div>
 
-        {/* Mis Pedidos — Glass Card */}
-        <div className="bg-white/90 backdrop-blur-lg rounded-[2rem] border border-white/60 shadow-[0_8px_32px_rgba(177,48,107,0.08)] overflow-hidden">
-          <button
-            onClick={() => setPedidosOpen(v => !v)}
-            className="w-full flex items-center justify-between p-6 md:p-8 hover:bg-brand-cream/20 transition-colors group"
-          >
-            <div>
-              <h2 className="font-display text-2xl font-black text-brand-wood">Mis pedidos</h2>
-              <p className="text-xs text-brand-wood-soft font-medium mt-1">Historial de tus compras</p>
-            </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {!loadingPedidos && pedidos.length > 0 && (
-                <span className="text-xs font-black bg-brand-berry text-white px-3 py-1.5 rounded-full">
-                  {pedidos.length}
-                </span>
-              )}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`w-5 h-5 text-brand-wood/60 transition-transform duration-300 ${pedidosOpen ? 'rotate-180' : ''}`}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </div>
-          </button>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pedidos</p>
+            <p className="font-display text-2xl font-black text-brand-wood mt-1">{metricas.totalCount}</p>
+          </div>
+          <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pendientes</p>
+            <p className="font-display text-2xl font-black text-brand-coral mt-1">{metricas.pendientesCount}</p>
+          </div>
+          <div className="col-span-2 lg:col-span-1 bg-gradient-to-br from-brand-berry/10 to-brand-cream border-2 border-brand-berry/20 rounded-2xl px-4 py-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Total</p>
+            <p className="font-display text-2xl font-black text-brand-berry mt-1">{fmt(metricas.totalMonto)}</p>
+            <p className="text-xs text-brand-wood-soft mt-0.5">{metricas.entregadosCount} entregados</p>
+          </div>
+        </div>
 
-          {pedidosOpen && (
-            <div className="border-t border-brand-wood/10">
-              {loadingPedidos ? (
-                <div className="space-y-3 p-6 md:p-8">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-20 bg-gradient-to-r from-brand-cream to-brand-cream/50 rounded-xl animate-pulse" />
-                  ))}
-                </div>
-              ) : pedidos.length === 0 ? (
-                <div className="p-8 md:p-12 text-center">
-                  <div className="text-5xl mb-4">📋</div>
-                  <p className="text-lg font-black text-brand-wood mb-2">Sin pedidos todavía</p>
-                  <p className="text-sm text-brand-wood-soft mb-6">Cuando hagas tu primer pedido aparecerá aquí con todos los detalles.</p>
-                  <Link to="/#catalogo" className="inline-block btn-primary">
-                    Explorar catálogo
-                  </Link>
-                </div>
-              ) : (
-                <div className="divide-y divide-brand-wood/5">
-                  {pedidos.map(pedido => {
-                    const cfg = ESTATUS_CFG[pedido.estatus]
-                    const total = calcularTotal(pedido.detalle ?? [])
-                    const nProductos = pedido.detalle?.length ?? 0
-                    return (
-                      <div key={pedido.id} className="px-6 md:px-8 py-4 hover:bg-brand-cream/30 transition-colors">
-                        <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-2">
-                              <span className={`text-[10px] font-black px-2.5 py-1 rounded-full flex-shrink-0 border-2 ${cfg.badge}`}>
-                                {cfg.label}
-                              </span>
-                              {pedido.sucursal && (
-                                <span className="text-xs text-brand-wood-soft font-semibold truncate">
-                                  📍 {pedido.sucursal.nombre_sucursal}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-brand-wood-soft mb-2">
-                              <span className="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M16 3v18"/><path d="m9 9 3 3-3 3"/></svg>
-                                {fmtFecha(pedido.fecha_pedido)}
-                              </span>
-                              {pedido.fecha_entrega_programada && (
-                                <span className="flex items-center gap-1">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                                  {fmtFecha(pedido.fecha_entrega_programada)}
-                                </span>
-                              )}
-                              <span className="font-semibold text-brand-wood">
-                                {nProductos} {nProductos === 1 ? 'producto' : 'productos'}
-                              </span>
-                            </div>
-                            {/* Líneas del pedido */}
-                            {(pedido.detalle?.length ?? 0) > 0 && (
-                              <ul className="mt-3 space-y-1 text-xs">
-                                {pedido.detalle!.map(d => (
-                                  <li key={d.id} className="text-brand-wood-soft flex justify-between">
-                                    <span className="truncate">{d.producto?.name ?? `Producto #${d.producto_id}`}</span>
-                                    <span className="flex-shrink-0 ml-3 text-brand-wood font-semibold">
-                                      {d.cantidad}x {fmt(d.precio_unit)}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
+        <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
+          <div className="p-5 md:p-6 border-b border-brand-wood/5">
+            <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis pedidos</h2>
+            <p className="text-xs text-brand-wood-soft font-medium mt-1">Historial de tus compras</p>
+
+            <div className="flex items-center gap-2 flex-wrap mt-4">
+              <button
+                onClick={() => setFiltroEstatus('todos')}
+                className={`text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-full border transition-all ${
+                  filtroEstatus === 'todos'
+                    ? 'bg-brand-wood text-white border-brand-wood shadow-[2px_2px_0_rgba(91,56,34,0.25)]'
+                    : 'bg-white text-brand-wood border-brand-wood/15 hover:border-brand-wood/40'
+                }`}
+              >
+                Todos ({pedidos.length})
+              </button>
+              {(Object.entries(ESTATUS_CFG) as [EstatusPedido, typeof ESTATUS_CFG[EstatusPedido]][]).map(([key, cfg]) => (
+                <button
+                  key={key}
+                  onClick={() => setFiltroEstatus(filtroEstatus === key ? 'todos' : key)}
+                  className={`text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-full border transition-all ${cfg.badge} ${
+                    filtroEstatus === key ? 'ring-2 ring-offset-1 ring-current' : 'opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  {cfg.label}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="text"
+              placeholder="Buscar por sucursal, notas o folio…"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              className="input w-full mt-4"
+            />
+          </div>
+
+          <div className="p-4 md:p-5">
+            {loadingPedidos ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
+              </div>
+            ) : filtrados.length === 0 ? (
+              <EmptyState
+                tone="berry"
+                icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 9 3 3-3 3"/><path d="M16 3v18"/></svg>}
+                title={hayFiltro ? 'Sin resultados' : 'Sin pedidos todavía'}
+                description={hayFiltro
+                  ? 'Probá cambiar el filtro o el término de búsqueda.'
+                  : 'Cuando hagas tu primer pedido aparecerá aquí con todos los detalles.'}
+                action={hayFiltro ? (
+                  <button onClick={() => { setFiltroEstatus('todos'); setBusqueda('') }} className="btn-secondary text-sm">Limpiar filtros</button>
+                ) : (
+                  <Link to="/#catalogo" className="btn-primary text-sm">Explorar catálogo</Link>
+                )}
+              />
+            ) : (
+              <div className="space-y-2">
+                {filtrados.map(pedido => {
+                  const cfg = ESTATUS_CFG[pedido.estatus]
+                  const total = calcularTotal(pedido.detalle ?? [])
+                  const nProd = pedido.detalle?.length ?? 0
+                  const isExpanded = expandedId === pedido.id
+
+                  return (
+                    <div key={pedido.id} className="bg-white rounded-2xl border border-brand-wood/10 overflow-hidden">
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : pedido.id)}
+                        className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-brand-cream/30 transition-colors"
+                      >
+                        <span className="text-brand-wood-soft flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg"
+                               className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                               viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6"/>
+                          </svg>
+                        </span>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-brand-wood truncate">Pedido</p>
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border flex-shrink-0 ${cfg.badge}`}>
+                              {cfg.label}
+                            </span>
                           </div>
-                          {total > 0 && (
-                            <div className="text-right flex-shrink-0">
-                              <p className="font-display text-xl font-black bg-gradient-to-r from-brand-berry to-brand-berry-soft bg-clip-text text-transparent">
-                                {fmt(total)}
-                              </p>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-brand-wood-soft flex-wrap">
+                            <span>{fmtFecha(pedido.fecha_pedido)}</span>
+                            {pedido.sucursal?.nombre_sucursal && <span>· {pedido.sucursal.nombre_sucursal}</span>}
+                            {pedido.fecha_entrega_programada && <span>· Entrega {fmtFecha(pedido.fecha_entrega_programada)}</span>}
+                            <span>{nProd} {nProd === 1 ? 'producto' : 'productos'}</span>
+                            {total > 0 && <span className="text-brand-wood font-black">{fmt(total)}</span>}
+                          </div>
+                        </div>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="border-t border-brand-wood/5 bg-brand-cream/20 px-4 py-3 space-y-3">
+                          {pedido.notas && (
+                            <p className="text-xs text-brand-wood-soft italic">{pedido.notas}</p>
+                          )}
+
+                          {(pedido.detalle?.length ?? 0) === 0 ? (
+                            <p className="text-xs text-brand-wood-soft italic">Sin detalle de productos</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {pedido.detalle!.map(d => (
+                                <div key={d.id} className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-xl bg-white border border-brand-wood/10 flex-shrink-0 overflow-hidden">
+                                    {d.producto?.photo_url ? (
+                                      <img src={d.producto.photo_url} alt={d.producto.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-brand-wood-soft">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-brand-wood truncate">{d.producto?.name ?? `Producto #${d.producto_id}`}</p>
+                                    <p className="text-xs text-brand-wood-soft">
+                                      {d.cantidad} × {fmt(d.precio_unit)}
+                                    </p>
+                                  </div>
+                                  <p className="text-sm font-black text-brand-wood">{fmt(d.cantidad * d.precio_unit)}</p>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
-                        {pedido.notas && (
-                          <p className="mt-2 text-xs text-brand-wood-soft italic border-l-2 border-brand-wood/10 pl-2">{pedido.notas}</p>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Placeholder Promociones */}
         <div className="bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 rounded-[2rem] border-2 border-dashed border-brand-teal/30 p-6 md:p-8 text-center">
           <div className="text-4xl mb-3">🎉</div>
           <h3 className="font-display text-xl font-black text-brand-wood mb-2">Promociones (próximamente)</h3>
