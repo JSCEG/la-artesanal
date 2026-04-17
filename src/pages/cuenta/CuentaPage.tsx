@@ -29,7 +29,7 @@ function fmtFecha(iso: string) {
 // ─── Página ───────────────────────────────────────────────────────────────────
 
 export default function CuentaPage() {
-  const { profile, signOut } = useSession()
+  const { profile, session, signOut } = useSession()
   const navigate = useNavigate()
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [loadingPedidos, setLoadingPedidos] = useState(true)
@@ -90,7 +90,7 @@ export default function CuentaPage() {
                   {profile?.commercial_profile === 'mayorista' ? '🏪 Mayorista' : '🛒 Minorista'}
                 </span>
                 <span className="text-xs font-medium text-brand-wood-soft">
-                  {profile?.email}
+                  {session?.user?.email}
                 </span>
               </div>
             </div>
