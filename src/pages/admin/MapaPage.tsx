@@ -282,7 +282,7 @@ export default function MapaPage() {
           </div>
 
           {/* Mapa */}
-          <div className="flex-1 rounded-2xl overflow-hidden border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
+          <div className="flex-1 rounded-2xl overflow-hidden border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] relative z-0">
             {conCoordenadas.length === 0 ? (
               <div className="h-full p-4 flex items-center justify-center">
                 <EmptyState
