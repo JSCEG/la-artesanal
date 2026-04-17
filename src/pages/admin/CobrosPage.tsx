@@ -169,6 +169,15 @@ export default function CobrosPage() {
     return t
   }, [cobros])
 
+  // Antigüedad CxC: FIFO cobros → pedidos ordenados por fecha
+  type Bucket = '0-7' | '8-15' | '16-30' | '31+'
+  const [aging, setAging] = useState<Record<Bucket, { monto: number; count: number }>>({
+    '0-7':   { monto: 0, count: 0 },
+    '8-15':  { monto: 0, count: 0 },
+    '16-30': { monto: 0, count: 0 },
+    '31+':   { monto: 0, count: 0 },
+  })
+
   // Clientes con saldo (top deudores)
   const [topDeudores, setTopDeudores] = useState<{ cliente: Cliente; saldo: number }[]>([])
   useEffect(() => {
@@ -196,6 +205,50 @@ export default function CobrosPage() {
         .sort((a, b) => b.saldo - a.saldo)
         .slice(0, 5)
       setTopDeudores(deudores)
+
+      // ── Antigüedad: FIFO por cliente ──
+      const { data: pedidosDet } = await supabase
+        .from('pedido_detalle')
+        .select('cantidad, precio_unit, pedido:pedidos!inner(id, cliente_id, fecha_pedido, estatus)')
+        .in('pedido.estatus', ['confirmado', 'en_ruta', 'entregado'])
+      // Agrupa total por pedido
+      const pedidosMap = new Map<string, { cliente_id: string; fecha: string; total: number }>()
+      for (const r of (pedidosDet ?? []) as any[]) {
+        const p = r.pedido
+        if (!p?.id) continue
+        const prev = pedidosMap.get(p.id)
+        const monto = r.cantidad * r.precio_unit
+        if (prev) prev.total += monto
+        else pedidosMap.set(p.id, { cliente_id: p.cliente_id, fecha: p.fecha_pedido, total: monto })
+      }
+      // Por cliente, ordenar pedidos asc por fecha y aplicar FIFO
+      const porCliente = new Map<string, { id: string; fecha: string; total: number }[]>()
+      for (const [id, v] of pedidosMap) {
+        if (!porCliente.has(v.cliente_id)) porCliente.set(v.cliente_id, [])
+        porCliente.get(v.cliente_id)!.push({ id, fecha: v.fecha, total: v.total })
+      }
+      const buckets: Record<Bucket, { monto: number; count: number }> = {
+        '0-7':   { monto: 0, count: 0 },
+        '8-15':  { monto: 0, count: 0 },
+        '16-30': { monto: 0, count: 0 },
+        '31+':   { monto: 0, count: 0 },
+      }
+      const hoy = Date.now()
+      for (const [cid, pedidos] of porCliente) {
+        pedidos.sort((a, b) => a.fecha.localeCompare(b.fecha))
+        let restante = cobradoPorCliente[cid] ?? 0
+        for (const p of pedidos) {
+          const pagado = Math.min(restante, p.total)
+          restante -= pagado
+          const saldo = p.total - pagado
+          if (saldo <= 0.01) continue
+          const dias = Math.floor((hoy - parseFecha(p.fecha).getTime()) / 86400000)
+          const b: Bucket = dias <= 7 ? '0-7' : dias <= 15 ? '8-15' : dias <= 30 ? '16-30' : '31+'
+          buckets[b].monto += saldo
+          buckets[b].count += 1
+        }
+      }
+      setAging(buckets)
     })()
   }, [clientes, cobros])
 
@@ -263,6 +316,40 @@ export default function CobrosPage() {
                 <p className="font-display text-sm font-black text-brand-coral flex-shrink-0">{fmt(saldo)}</p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Antigüedad CxC */}
+      {!loading && (aging['0-7'].count + aging['8-15'].count + aging['16-30'].count + aging['31+'].count) > 0 && (
+        <div className="bg-white border border-brand-wood/10 rounded-2xl p-4 space-y-3">
+          <p className="text-[10px] font-black text-brand-wood/70 uppercase tracking-widest flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-brand-berry" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Antigüedad de cuentas por cobrar
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {([
+              { key: '0-7'   as const, label: 'Al día',  sub: '0–7 días',   tone: 'teal'   },
+              { key: '8-15'  as const, label: '8–15 d',  sub: 'Reciente',    tone: 'coral'  },
+              { key: '16-30' as const, label: '16–30 d', sub: 'Atrasado',    tone: 'berry'  },
+              { key: '31+'   as const, label: '31+ d',   sub: 'Crítico',     tone: 'wood'   },
+            ]).map(b => {
+              const v = aging[b.key]
+              const cls =
+                b.tone === 'teal'  ? 'bg-brand-teal/5 border-brand-teal/25 text-brand-teal'   :
+                b.tone === 'coral' ? 'bg-brand-coral/10 border-brand-coral/30 text-brand-coral' :
+                b.tone === 'berry' ? 'bg-brand-berry/10 border-brand-berry/30 text-brand-berry' :
+                                     'bg-brand-wood/10 border-brand-wood/30 text-brand-wood'
+              return (
+                <div key={b.key} className={`rounded-xl border px-3 py-2.5 ${cls}`}>
+                  <p className="text-[9px] font-black uppercase tracking-widest opacity-80">{b.label}</p>
+                  <p className="font-display text-xl font-black mt-0.5">{fmt(v.monto)}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider opacity-70 mt-0.5">
+                    {v.count} {v.count === 1 ? 'pedido' : 'pedidos'} · {b.sub}
+                  </p>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
