@@ -65,137 +65,174 @@ export default function CuentaPage() {
   return (
     <div className="min-h-screen bg-brand-cream">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 py-10 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12 space-y-6">
 
-        {/* Tarjeta perfil */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 rounded-full bg-brand-berry flex items-center justify-center">
-              <span className="text-white font-black text-xl">
-                {profile?.full_name?.[0]?.toUpperCase() ?? '?'}
-              </span>
+        {/* Perfil Card — Glass */}
+        <div className="bg-white/90 backdrop-blur-lg rounded-[2rem] border border-white/60 shadow-[0_8px_32px_rgba(177,48,107,0.08)] p-6 md:p-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
+            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center flex-shrink-0 font-black text-2xl md:text-3xl text-white ${
+              profile?.commercial_profile === 'mayorista'
+                ? 'bg-gradient-to-br from-brand-teal to-brand-teal-soft'
+                : 'bg-gradient-to-br from-brand-berry to-brand-berry-soft'
+            }`}>
+              {profile?.full_name?.[0]?.toUpperCase() ?? '?'}
             </div>
-            <div>
-              <h1 className="text-xl font-black text-brand-coffee">{profile?.full_name}</h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+            <div className="flex-1 text-center md:text-left">
+              <h1 className="font-display text-2xl md:text-3xl font-black text-brand-wood">
+                {profile?.full_name}
+              </h1>
+              <div className="flex items-center gap-3 mt-3 justify-center md:justify-start flex-wrap">
+                <span className={`text-xs font-black px-3 py-1.5 rounded-full border-2 ${
                   profile?.commercial_profile === 'mayorista'
-                    ? 'bg-brand-ocean/10 text-brand-ocean'
-                    : 'bg-brand-berry/10 text-brand-berry'
+                    ? 'bg-brand-teal/10 text-brand-teal border-brand-teal/30'
+                    : 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'
                 }`}>
-                  {profile?.commercial_profile === 'mayorista' ? 'Mayorista' : 'Minorista'}
+                  {profile?.commercial_profile === 'mayorista' ? '🏪 Mayorista' : '🛒 Minorista'}
+                </span>
+                <span className="text-xs font-medium text-brand-wood-soft">
+                  {profile?.email}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6 border-t border-brand-wood/10">
             <Link to="/#catalogo"
-              className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-brand-berry transition-colors group">
-              <span className="font-semibold text-gray-700 group-hover:text-brand-berry">Ver catálogo</span>
-              <span className="text-gray-400">→</span>
+              className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-brand-berry/5 to-transparent border border-brand-berry/20 hover:border-brand-berry/40 hover:shadow-[0_4px_16px_rgba(177,48,107,0.12)] transition-all group">
+              <span className="font-bold text-brand-wood group-hover:text-brand-berry transition-colors">Ver catálogo</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-brand-berry/60 group-hover:text-brand-berry group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </Link>
 
-            {/* Mis pedidos — accordion */}
-            <div className="rounded-xl border border-gray-100 overflow-hidden">
-              <button
-                onClick={() => setPedidosOpen(v => !v)}
-                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-              >
-                <span className="font-semibold text-gray-700">Mis pedidos</span>
-                <div className="flex items-center gap-2">
-                  {!loadingPedidos && pedidos.length > 0 && (
-                    <span className="text-xs font-bold bg-brand-ocean/10 text-brand-ocean px-2 py-0.5 rounded-full">
-                      {pedidos.length}
-                    </span>
-                  )}
-                  <span className="text-gray-400 text-sm">{pedidosOpen ? '∧' : '∨'}</span>
-                </div>
-              </button>
+            <button onClick={handleSignOut}
+              className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-red-500/5 to-transparent border border-red-200/30 hover:border-red-300 hover:shadow-[0_4px_16px_rgba(239,68,68,0.08)] transition-all group">
+              <span className="font-bold text-brand-wood group-hover:text-red-600 transition-colors">Cerrar sesión</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
 
-              {pedidosOpen && (
-                <div className="border-t border-gray-100">
-                  {loadingPedidos ? (
-                    <div className="space-y-2 p-3">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />
-                      ))}
-                    </div>
-                  ) : pedidos.length === 0 ? (
-                    <div className="p-6 text-center">
-                      <p className="text-2xl mb-2">📋</p>
-                      <p className="text-sm text-gray-500 font-semibold">Sin pedidos todavía</p>
-                      <p className="text-xs text-gray-400 mt-1">Cuando hagamos tu primer pedido aparecerá aquí</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-50">
-                      {pedidos.map(pedido => {
-                        const cfg = ESTATUS_CFG[pedido.estatus]
-                        const total = calcularTotal(pedido.detalle ?? [])
-                        const nProductos = pedido.detalle?.length ?? 0
-                        return (
-                          <div key={pedido.id} className="px-4 py-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${cfg.badge}`}>
-                                    {cfg.label}
-                                  </span>
-                                  {pedido.sucursal && (
-                                    <span className="text-xs text-gray-500 truncate">
-                                      🏪 {pedido.sucursal.nombre_sucursal}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-400 flex-wrap">
-                                  <span>📅 {fmtFecha(pedido.fecha_pedido)}</span>
-                                  {pedido.fecha_entrega_programada && (
-                                    <span>→ entrega {fmtFecha(pedido.fecha_entrega_programada)}</span>
-                                  )}
-                                  <span>{nProductos} {nProductos === 1 ? 'producto' : 'productos'}</span>
-                                </div>
-                                {/* Líneas del pedido */}
-                                {(pedido.detalle?.length ?? 0) > 0 && (
-                                  <ul className="mt-2 space-y-0.5">
-                                    {pedido.detalle!.map(d => (
-                                      <li key={d.id} className="text-xs text-gray-500 flex justify-between">
-                                        <span className="truncate">{d.producto?.name ?? `Producto #${d.producto_id}`}</span>
-                                        <span className="flex-shrink-0 ml-3 text-gray-400">
-                                          {d.cantidad} × {fmt(d.precio_unit)}
-                                        </span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                              {total > 0 && (
-                                <p className="text-sm font-black text-brand-coffee flex-shrink-0">{fmt(total)}</p>
+        {/* Mis Pedidos — Glass Card */}
+        <div className="bg-white/90 backdrop-blur-lg rounded-[2rem] border border-white/60 shadow-[0_8px_32px_rgba(177,48,107,0.08)] overflow-hidden">
+          <button
+            onClick={() => setPedidosOpen(v => !v)}
+            className="w-full flex items-center justify-between p-6 md:p-8 hover:bg-brand-cream/20 transition-colors group"
+          >
+            <div>
+              <h2 className="font-display text-2xl font-black text-brand-wood">Mis pedidos</h2>
+              <p className="text-xs text-brand-wood-soft font-medium mt-1">Historial de tus compras</p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {!loadingPedidos && pedidos.length > 0 && (
+                <span className="text-xs font-black bg-brand-berry text-white px-3 py-1.5 rounded-full">
+                  {pedidos.length}
+                </span>
+              )}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`w-5 h-5 text-brand-wood/60 transition-transform duration-300 ${pedidosOpen ? 'rotate-180' : ''}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+          </button>
+
+          {pedidosOpen && (
+            <div className="border-t border-brand-wood/10">
+              {loadingPedidos ? (
+                <div className="space-y-3 p-6 md:p-8">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-20 bg-gradient-to-r from-brand-cream to-brand-cream/50 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : pedidos.length === 0 ? (
+                <div className="p-8 md:p-12 text-center">
+                  <div className="text-5xl mb-4">📋</div>
+                  <p className="text-lg font-black text-brand-wood mb-2">Sin pedidos todavía</p>
+                  <p className="text-sm text-brand-wood-soft mb-6">Cuando hagas tu primer pedido aparecerá aquí con todos los detalles.</p>
+                  <Link to="/#catalogo" className="inline-block btn-primary">
+                    Explorar catálogo
+                  </Link>
+                </div>
+              ) : (
+                <div className="divide-y divide-brand-wood/5">
+                  {pedidos.map(pedido => {
+                    const cfg = ESTATUS_CFG[pedido.estatus]
+                    const total = calcularTotal(pedido.detalle ?? [])
+                    const nProductos = pedido.detalle?.length ?? 0
+                    return (
+                      <div key={pedido.id} className="px-6 md:px-8 py-4 hover:bg-brand-cream/30 transition-colors">
+                        <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                              <span className={`text-[10px] font-black px-2.5 py-1 rounded-full flex-shrink-0 border-2 ${cfg.badge}`}>
+                                {cfg.label}
+                              </span>
+                              {pedido.sucursal && (
+                                <span className="text-xs text-brand-wood-soft font-semibold truncate">
+                                  📍 {pedido.sucursal.nombre_sucursal}
+                                </span>
                               )}
                             </div>
-                            {pedido.notas && (
-                              <p className="mt-1.5 text-xs text-gray-400 italic">{pedido.notas}</p>
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-brand-wood-soft mb-2">
+                              <span className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M16 3v18"/><path d="m9 9 3 3-3 3"/></svg>
+                                {fmtFecha(pedido.fecha_pedido)}
+                              </span>
+                              {pedido.fecha_entrega_programada && (
+                                <span className="flex items-center gap-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                  {fmtFecha(pedido.fecha_entrega_programada)}
+                                </span>
+                              )}
+                              <span className="font-semibold text-brand-wood">
+                                {nProductos} {nProductos === 1 ? 'producto' : 'productos'}
+                              </span>
+                            </div>
+                            {/* Líneas del pedido */}
+                            {(pedido.detalle?.length ?? 0) > 0 && (
+                              <ul className="mt-3 space-y-1 text-xs">
+                                {pedido.detalle!.map(d => (
+                                  <li key={d.id} className="text-brand-wood-soft flex justify-between">
+                                    <span className="truncate">{d.producto?.name ?? `Producto #${d.producto_id}`}</span>
+                                    <span className="flex-shrink-0 ml-3 text-brand-wood font-semibold">
+                                      {d.cantidad}x {fmt(d.precio_unit)}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
                             )}
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
+                          {total > 0 && (
+                            <div className="text-right flex-shrink-0">
+                              <p className="font-display text-xl font-black bg-gradient-to-r from-brand-berry to-brand-berry-soft bg-clip-text text-transparent">
+                                {fmt(total)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {pedido.notas && (
+                          <p className="mt-2 text-xs text-brand-wood-soft italic border-l-2 border-brand-wood/10 pl-2">{pedido.notas}</p>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
+          )}
+        </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl border border-gray-100 opacity-50">
-              <span className="font-semibold text-gray-500">Mis promociones</span>
-              <span className="text-xs text-gray-400">Próximamente</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSignOut}
-            className="w-full mt-8 py-2.5 text-sm text-gray-400 hover:text-brand-berry border border-gray-100 rounded-xl transition-colors"
-          >
-            Cerrar sesión
-          </button>
+        {/* Placeholder Promociones */}
+        <div className="bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 rounded-[2rem] border-2 border-dashed border-brand-teal/30 p-6 md:p-8 text-center">
+          <div className="text-4xl mb-3">🎉</div>
+          <h3 className="font-display text-xl font-black text-brand-wood mb-2">Promociones (próximamente)</h3>
+          <p className="text-sm text-brand-wood-soft">Aquí aparecerán tus promociones exclusivas y descuentos especiales.</p>
         </div>
 
       </div>
