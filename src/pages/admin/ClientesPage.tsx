@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getClientes, deleteCliente, deleteSucursal } from '../../services/clientes'
 import type { Cliente, Sucursal } from '../../services/clientes'
+import { getSaldoCliente } from '../../services/pedidos'
 import ClienteModal from '../../components/admin/ClienteModal'
 import SucursalModal from '../../components/admin/SucursalModal'
 import { CardSkeleton } from '../../components/admin/Skeleton'
@@ -33,9 +34,13 @@ const ICON_STORE = (
 )
 
 type ConfirmDelete = { tipo: 'cliente' | 'sucursal'; id: string; nombre: string }
+type Saldo = { total_pedidos: number; total_cobrado: number; saldo: number }
+
+const fmtMoney = (n: number) => `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [saldos, setSaldos] = useState<Record<string, Saldo>>({})
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [expandido, setExpandido] = useState<string | null>(null)
@@ -50,7 +55,12 @@ export default function ClientesPage() {
   async function fetchClientes() {
     setLoading(true)
     try {
-      setClientes(await getClientes())
+      const list = await getClientes()
+      setClientes(list)
+      // Fetch saldos en paralelo (no bloqueante de UI)
+      Promise.all(list.map(c => getSaldoCliente(c.id).then(s => [c.id, s] as const)))
+        .then(pairs => setSaldos(Object.fromEntries(pairs)))
+        .catch(() => { /* silencio: saldos opcionales */ })
     } catch {
       toast.error('No se pudieron cargar los clientes')
     } finally {
@@ -161,6 +171,27 @@ export default function ClientesPage() {
                         {ICON_CREDIT} Crédito: ${cliente.limite_credito.toLocaleString()}
                       </span>
                     )}
+                    {(() => {
+                      const s = saldos[cliente.id]
+                      if (!s) return null
+                      if (s.saldo <= 0) {
+                        return (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-brand-teal/10 text-brand-teal border border-brand-teal/30 px-2 py-0.5 rounded-full">
+                            Al día
+                          </span>
+                        )
+                      }
+                      const excede = cliente.maneja_credito && s.saldo > cliente.limite_credito
+                      return (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                          excede
+                            ? 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'
+                            : 'bg-brand-coral/15 text-brand-coral border-brand-coral/30'
+                        }`}>
+                          Debe {fmtMoney(s.saldo)}
+                        </span>
+                      )
+                    })()}
                     <span className="text-brand-wood/50">
                       {cliente.sucursales?.length ?? 0} {(cliente.sucursales?.length ?? 0) === 1 ? 'sucursal' : 'sucursales'}
                     </span>
@@ -201,6 +232,35 @@ export default function ClientesPage() {
               {/* Sucursales expandidas */}
               {expandido === cliente.id && (
                 <div className="border-t border-brand-wood/5 bg-brand-cream/20">
+                  {/* Resumen financiero */}
+                  {saldos[cliente.id] && (
+                    <div className="px-4 py-3 border-b border-brand-wood/5 grid grid-cols-3 gap-2">
+                      <div className="rounded-xl bg-white border border-brand-wood/10 px-3 py-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-brand-wood-soft">Pedidos</p>
+                        <p className="font-display text-base font-black text-brand-wood mt-0.5">{fmtMoney(saldos[cliente.id].total_pedidos)}</p>
+                      </div>
+                      <div className="rounded-xl bg-white border border-brand-wood/10 px-3 py-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-brand-wood-soft">Cobrado</p>
+                        <p className="font-display text-base font-black text-brand-teal mt-0.5">{fmtMoney(saldos[cliente.id].total_cobrado)}</p>
+                      </div>
+                      <div className={`rounded-xl px-3 py-2 border ${
+                        saldos[cliente.id].saldo <= 0
+                          ? 'bg-brand-teal/5 border-brand-teal/25'
+                          : (cliente.maneja_credito && saldos[cliente.id].saldo > cliente.limite_credito)
+                            ? 'bg-brand-berry/10 border-brand-berry/30'
+                            : 'bg-brand-coral/10 border-brand-coral/30'
+                      }`}>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-brand-wood-soft">Saldo</p>
+                        <p className={`font-display text-base font-black mt-0.5 ${
+                          saldos[cliente.id].saldo <= 0
+                            ? 'text-brand-teal'
+                            : (cliente.maneja_credito && saldos[cliente.id].saldo > cliente.limite_credito)
+                              ? 'text-brand-berry'
+                              : 'text-brand-coral'
+                        }`}>{fmtMoney(Math.max(0, saldos[cliente.id].saldo))}</p>
+                      </div>
+                    </div>
+                  )}
                   {(cliente.sucursales?.length ?? 0) === 0 ? (
                     <div className="px-4 py-4 text-center">
                       <p className="text-xs text-brand-wood-soft mb-2">Sin sucursales registradas</p>
