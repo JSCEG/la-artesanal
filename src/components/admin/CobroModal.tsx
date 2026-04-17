@@ -279,7 +279,7 @@ export default function CobroModal({ clienteInicial, pedidoInicial, onClose, onS
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Monto *</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-xl font-black text-brand-wood-soft pointer-events-none">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-lg font-black text-brand-wood-soft pointer-events-none select-none">$</span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -288,7 +288,7 @@ export default function CobroModal({ clienteInicial, pedidoInicial, onClose, onS
                   value={monto || ''}
                   onChange={e => setMonto(Number(e.target.value))}
                   placeholder="0"
-                  className="input w-full pl-9 font-display text-xl font-black tracking-tight"
+                  className="input w-full !pl-10 font-display text-xl font-black tracking-tight"
                   required
                 />
               </div>
