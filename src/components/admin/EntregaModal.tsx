@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useSession } from '../../hooks/useSession'
 import {
   createEntrega,
@@ -32,16 +32,36 @@ interface Props {
   onSaved: () => void
 }
 
-const METODOS: { value: MetodoCobro; label: string; icon: string }[] = [
-  { value: 'efectivo',      label: 'Efectivo',      icon: '💵' },
-  { value: 'transferencia', label: 'Transferencia',  icon: '🏦' },
-  { value: 'tarjeta',       label: 'Tarjeta',        icon: '💳' },
+// ─── Iconos SVG inline ───────────────────────────────────────────────────────
+
+const ICONS: Record<string, ReactNode> = {
+  efectivo: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+  ),
+  transferencia: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3 21 7l-4 4"/><path d="M21 7H9"/><path d="M7 21 3 17l4-4"/><path d="M3 17h12"/></svg>
+  ),
+  tarjeta: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+  ),
+  check: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  ),
+  warn: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+  ),
+}
+
+const METODOS: { value: MetodoCobro; label: string }[] = [
+  { value: 'efectivo',      label: 'Efectivo' },
+  { value: 'transferencia', label: 'Transferencia' },
+  { value: 'tarjeta',       label: 'Tarjeta' },
 ]
 
-const ESTATUS_OPTS: { value: EstatusEntrega; label: string; color: string }[] = [
-  { value: 'completa', label: 'Completa', color: 'bg-green-100 text-green-700' },
-  { value: 'parcial',  label: 'Parcial',  color: 'bg-amber-100 text-amber-700' },
-  { value: 'fallida',  label: 'Fallida',  color: 'bg-red-100 text-red-500'     },
+const ESTATUS_OPTS: { value: EstatusEntrega; label: string; activeBg: string; activeBorder: string; activeText: string }[] = [
+  { value: 'completa', label: 'Completa', activeBg: 'bg-brand-teal/15',  activeBorder: 'border-brand-teal',  activeText: 'text-brand-teal'  },
+  { value: 'parcial',  label: 'Parcial',  activeBg: 'bg-brand-coral/15', activeBorder: 'border-brand-coral', activeText: 'text-brand-coral' },
+  { value: 'fallida',  label: 'Fallida',  activeBg: 'bg-brand-berry/10', activeBorder: 'border-brand-berry', activeText: 'text-brand-berry' },
 ]
 
 export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props) {
@@ -168,34 +188,43 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
     onSaved()
   }
 
+  const cobroBalance = total - montoCobro
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white w-full sm:max-w-xl sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white w-full sm:max-w-2xl rounded-t-[2rem] sm:rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.25)] max-h-[94vh] flex flex-col border border-white/60">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
-          <h2 className="text-lg font-black text-brand-coffee">Registrar entrega</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-brand-wood/10 flex-shrink-0">
+          <div>
+            <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Registrar entrega</h2>
+            <p className="text-xs text-brand-wood-soft font-medium mt-0.5">Confirma la entrega y, si aplica, el cobro</p>
+          </div>
+          <button onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-cream/60 text-brand-wood-soft hover:text-brand-berry transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
 
             {/* Pedido */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Pedido *</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Pedido *</label>
               {loadingPedidos ? (
-                <div className="input w-full animate-pulse bg-gray-100 h-10" />
+                <div className="input w-full animate-pulse bg-brand-cream/60 h-11" />
               ) : pedidos.length === 0 ? (
-                <div className="input w-full bg-gray-50 text-gray-400 text-sm py-2.5 px-3">
-                  Sin pedidos confirmados pendientes
+                <div className="flex items-start gap-2 bg-brand-cream/40 border-2 border-dashed border-brand-wood/15 rounded-xl px-4 py-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-brand-wood-soft mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                  <p className="text-xs text-brand-wood-soft font-medium">Sin pedidos confirmados pendientes de entrega.</p>
                 </div>
               ) : (
                 <select
                   value={pedidoId}
                   onChange={e => setPedidoId(e.target.value)}
                   required
-                  className="input w-full"
+                  className="input"
                 >
                   <option value="">— Seleccionar pedido —</option>
                   {pedidos.map(p => (
@@ -209,82 +238,128 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
                   ))}
                 </select>
               )}
+              {/* Tip del pedido seleccionado */}
+              {pedidoSel && (
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border-2 ${
+                    pedidoSel.cliente?.tipo === 'mayorista' ? 'bg-brand-teal/10 text-brand-teal border-brand-teal/30' :
+                    pedidoSel.cliente?.tipo === 'minorista' ? 'bg-brand-berry/10 text-brand-berry border-brand-berry/30' :
+                    'bg-brand-coral/15 text-brand-coral border-brand-coral/30'
+                  }`}>
+                    {pedidoSel.cliente?.tipo ?? 'cliente'}
+                  </span>
+                  <span className="text-xs text-brand-wood-soft font-semibold">
+                    Total pedido: {fmt(calcularTotal(pedidoSel.detalle ?? []))}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Fecha + Entregado por */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">Fecha entrega *</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Fecha entrega *</label>
                 <input type="date" value={fechaEntrega}
                   onChange={e => setFechaEntrega(e.target.value)}
-                  required className="input w-full" />
+                  required className="input" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">Entregado por</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Entregado por</label>
                 <input type="text" value={entregadoPor}
                   onChange={e => setEntregadoPor(e.target.value)}
                   placeholder="Nombre del repartidor"
-                  className="input w-full" />
+                  className="input" />
               </div>
             </div>
 
             {/* Resultado */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">Resultado *</label>
-              <div className="flex gap-2">
-                {ESTATUS_OPTS.map(opt => (
-                  <button key={opt.value} type="button" onClick={() => setEstatus(opt.value)}
-                    className={`flex-1 text-xs font-bold py-2 rounded-xl border-2 transition-all ${
-                      estatus === opt.value
-                        ? opt.color + ' border-current'
-                        : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
-                    }`}>
-                    {opt.label}
-                  </button>
-                ))}
+              <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-2">Resultado *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {ESTATUS_OPTS.map(opt => {
+                  const active = estatus === opt.value
+                  return (
+                    <button key={opt.value} type="button" onClick={() => setEstatus(opt.value)}
+                      className={`text-[10px] uppercase tracking-widest font-black py-2.5 rounded-xl border-2 transition-all ${
+                        active
+                          ? `${opt.activeBg} ${opt.activeBorder} ${opt.activeText} shadow-sm`
+                          : 'bg-white text-brand-wood-soft border-brand-wood/15 hover:border-brand-wood/40'
+                      }`}>
+                      {opt.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
             {/* Productos */}
             {detalle.length > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-gray-500">Productos entregados</label>
-                  {pedidoSel && (
-                    <span className="text-xs text-gray-400">
-                      Pedido: {fmt(calcularTotal(pedidoSel.detalle ?? []))}
-                    </span>
-                  )}
-                </div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-2">Productos entregados</label>
                 <div className="space-y-2">
-                  {detalle.map((d, idx) => (
-                    <div key={d.producto_id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
-                      <div className="w-9 h-9 rounded-lg bg-white border border-gray-100 flex-shrink-0 overflow-hidden">
-                        {d.photo_url
-                          ? <img src={d.photo_url} alt={d.nombre} className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center text-sm">🍦</div>
-                        }
+                  {detalle.map((d, idx) => {
+                    const subtotal = d.cantidad * d.precio_unit
+                    const entregadoCompleto = d.cantidad === d.cantidad_pedida
+                    const entregadoParcial = d.cantidad > 0 && d.cantidad < d.cantidad_pedida
+                    return (
+                      <div key={d.producto_id} className="flex items-center gap-2 bg-white border-2 border-brand-wood/10 rounded-xl px-3 py-2.5 hover:border-brand-berry/20 transition-colors">
+                        <div className="w-10 h-10 rounded-xl bg-brand-cream border border-brand-wood/10 flex-shrink-0 overflow-hidden">
+                          {d.photo_url
+                            ? <img src={d.photo_url} alt={d.nombre} className="w-full h-full object-cover" />
+                            : <div className="w-full h-full flex items-center justify-center text-brand-wood-soft">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                              </div>
+                          }
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-brand-wood truncate">{d.nombre}</p>
+                          <p className="text-[10px] text-brand-wood-soft font-semibold">
+                            Pedido: {d.cantidad_pedida} {d.unidad} · {fmt(d.precio_unit)}
+                          </p>
+                        </div>
+                        {/* Stepper */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button type="button"
+                            onClick={() => setItemCantidad(idx, Math.max(0, d.cantidad - 1))}
+                            disabled={estatus === 'fallida'}
+                            className="w-7 h-7 rounded-lg bg-brand-cream border border-brand-wood/10 text-brand-wood-soft hover:bg-brand-berry/10 hover:border-brand-berry/30 hover:text-brand-berry flex items-center justify-center font-black transition-colors disabled:opacity-40">
+                            −
+                          </button>
+                          <input
+                            type="number" min="0" max={d.cantidad_pedida} value={d.cantidad}
+                            onChange={e => setItemCantidad(idx, Number(e.target.value))}
+                            onClick={e => (e.target as HTMLInputElement).select()}
+                            disabled={estatus === 'fallida'}
+                            className={`w-11 text-center text-xs font-black border-2 rounded-lg py-1 bg-white focus:outline-none disabled:opacity-40 ${
+                              entregadoCompleto ? 'border-brand-teal/40' :
+                              entregadoParcial  ? 'border-brand-coral/40' :
+                                                  'border-brand-wood/10'
+                            }`}
+                          />
+                          <button type="button"
+                            onClick={() => setItemCantidad(idx, Math.min(d.cantidad_pedida, d.cantidad + 1))}
+                            disabled={estatus === 'fallida'}
+                            className="w-7 h-7 rounded-lg bg-brand-cream border border-brand-wood/10 text-brand-wood-soft hover:bg-brand-teal/10 hover:border-brand-teal/30 hover:text-brand-teal flex items-center justify-center font-black transition-colors disabled:opacity-40">
+                            +
+                          </button>
+                        </div>
+                        <p className="text-xs font-black text-brand-wood flex-shrink-0 w-16 text-right">
+                          {fmt(subtotal)}
+                        </p>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-700 truncate">{d.nombre}</p>
-                        <p className="text-xs text-gray-400">Pedido: {d.cantidad_pedida} {d.unidad}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <input
-                          type="number" min="0" value={d.cantidad}
-                          onChange={e => setItemCantidad(idx, Number(e.target.value))}
-                          onClick={e => (e.target as HTMLInputElement).select()}
-                          disabled={estatus === 'fallida'}
-                          className="w-16 text-center text-xs font-bold border border-gray-200 rounded-lg py-1 bg-white focus:outline-none focus:border-brand-ocean disabled:opacity-40"
-                        />
-                        <span className="text-xs text-gray-400">{fmt(d.cantidad * d.precio_unit)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
+
+                  {/* Resumen entregado */}
                   {total > 0 && (
-                    <div className="flex justify-between items-center px-3 pt-1">
-                      <span className="text-xs text-gray-400">Total entregado</span>
-                      <span className="text-sm font-black text-brand-coffee">{fmt(total)}</span>
+                    <div className="flex items-center justify-between bg-gradient-to-br from-brand-berry/5 to-brand-berry/10 border-2 border-brand-berry/20 rounded-xl px-4 py-3 mt-3">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-brand-berry/70">Total entregado</p>
+                        <p className="text-xs font-bold text-brand-wood">{detalle.filter(d => d.cantidad > 0).length} de {detalle.length} productos</p>
+                      </div>
+                      <p className="font-display text-2xl font-black bg-gradient-to-r from-brand-berry to-brand-berry-soft bg-clip-text text-transparent">
+                        {fmt(total)}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -293,125 +368,153 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
 
             {/* Notas */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Notas</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Notas</label>
               <textarea value={notas} onChange={e => setNotas(e.target.value)}
                 rows={2} placeholder="Observaciones de la entrega..."
-                className="input w-full resize-none" />
+                className="input resize-none" />
             </div>
 
             {/* ── Cobro al entregar ─────────────────────────────── */}
-            <div className={`rounded-2xl border-2 transition-colors ${cobrar ? 'border-green-300 bg-green-50/40' : 'border-gray-100 bg-gray-50/50'}`}>
-
+            <div className={`rounded-2xl border-2 transition-all ${
+              cobrar ? 'border-brand-teal/40 bg-brand-teal/5' : 'border-brand-wood/10 bg-brand-cream/20'
+            }`}>
               {/* Toggle */}
               <button
                 type="button"
                 onClick={() => setCobrar(v => !v)}
                 className="w-full flex items-center justify-between px-4 py-3"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-base">💵</span>
-                  <span className="text-sm font-bold text-gray-700">¿Se cobró en esta entrega?</span>
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                    cobrar ? 'bg-gradient-to-br from-brand-teal to-brand-teal-soft text-white shadow-md' : 'bg-white border border-brand-wood/10 text-brand-wood-soft'
+                  }`}>
+                    {ICONS.efectivo}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-black text-brand-wood">¿Se cobró en esta entrega?</p>
+                    <p className="text-[10px] text-brand-wood-soft font-semibold">Registra pago inmediato</p>
+                  </div>
                 </div>
-                <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${cobrar ? 'bg-green-500' : 'bg-gray-300'}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${cobrar ? 'translate-x-4' : 'translate-x-0'}`} />
+                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 flex-shrink-0 ${cobrar ? 'bg-brand-teal' : 'bg-brand-wood/20'}`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${cobrar ? 'translate-x-5' : 'translate-x-0'}`} />
                 </div>
               </button>
 
               {/* Detalle del cobro */}
               {cobrar && (
-                <div className="px-4 pb-4 space-y-3 border-t border-green-200/60">
-                  <p className="text-xs text-green-700 font-semibold pt-3">Se registrará un cobro automáticamente</p>
+                <div className="px-4 pb-4 space-y-4 border-t border-brand-teal/20">
 
                   {/* Métodos */}
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-2">Método de pago</label>
-                    <div className="flex gap-2">
-                      {METODOS.map(m => (
-                        <button key={m.value} type="button" onClick={() => setMetodoCobro(m.value)}
-                          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border-2 text-xs font-bold transition-all ${
-                            metodoCobro === m.value
-                              ? 'border-green-400 bg-green-100 text-green-700'
-                              : 'border-gray-200 text-gray-400 hover:border-gray-300'
-                          }`}>
-                          <span className="text-base">{m.icon}</span>
-                          {m.label}
-                        </button>
-                      ))}
+                  <div className="pt-4">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-2">Método de pago</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {METODOS.map(m => {
+                        const active = metodoCobro === m.value
+                        return (
+                          <button key={m.value} type="button" onClick={() => setMetodoCobro(m.value)}
+                            className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 transition-all ${
+                              active
+                                ? 'border-brand-teal bg-white text-brand-teal shadow-sm'
+                                : 'border-brand-wood/15 text-brand-wood-soft hover:border-brand-wood/30 bg-white/50'
+                            }`}>
+                            {ICONS[m.value]}
+                            <span className="text-[10px] uppercase tracking-widest font-black">{m.label}</span>
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
 
                   {/* Monto */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Monto cobrado *</label>
-                      <input
-                        type="number" min="0" step="0.01"
-                        value={montoCobro}
-                        onChange={e => setMontoCobro(Number(e.target.value))}
-                        onClick={e => (e.target as HTMLInputElement).select()}
-                        className="input w-full font-bold"
-                      />
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Monto cobrado *</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-wood-soft font-bold">$</span>
+                        <input
+                          type="number" min="0" step="0.01"
+                          value={montoCobro}
+                          onChange={e => setMontoCobro(Number(e.target.value))}
+                          onClick={e => (e.target as HTMLInputElement).select()}
+                          className="input pl-7 font-bold"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">
-                        Referencia {metodoCobro === 'transferencia' ? '*' : '(opcional)'}
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">
+                        Referencia {metodoCobro === 'transferencia' ? '*' : ''}
                       </label>
                       <input
                         type="text"
                         value={referencia}
                         onChange={e => setReferencia(e.target.value)}
-                        placeholder={metodoCobro === 'transferencia' ? 'Últimos 4 dígitos...' : '—'}
-                        className="input w-full"
+                        placeholder={metodoCobro === 'transferencia' ? 'Últimos 4 dígitos...' : 'Opcional'}
+                        className="input"
                       />
                     </div>
                   </div>
 
-                  {/* Resumen */}
-                  {total > 0 && montoCobro !== total && (
-                    <div className={`text-xs font-semibold px-3 py-2 rounded-lg ${
-                      montoCobro < total
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'bg-blue-50 text-blue-700'
-                    }`}>
-                      {montoCobro < total
-                        ? `⚠️ Cobro parcial — queda ${fmt(total - montoCobro)} pendiente en CxC`
-                        : `✓ Cobro mayor al total entregado (+${fmt(montoCobro - total)})`
-                      }
+                  {/* Resumen estado del cobro */}
+                  {total > 0 && montoCobro === total && (
+                    <div className="flex items-center gap-2 text-xs font-bold text-brand-teal bg-brand-teal/10 border-2 border-brand-teal/30 rounded-xl px-3 py-2">
+                      <span className="w-5 h-5 rounded-full bg-brand-teal text-white flex items-center justify-center flex-shrink-0">
+                        {ICONS.check}
+                      </span>
+                      Liquidado al 100%
                     </div>
                   )}
-                  {total > 0 && montoCobro === total && (
-                    <p className="text-xs font-semibold text-green-700 px-3 py-2 bg-green-50 rounded-lg">
-                      ✓ Liquidado al 100%
-                    </p>
+                  {total > 0 && montoCobro < total && montoCobro > 0 && (
+                    <div className="flex items-center gap-2 text-xs font-bold text-brand-coral bg-brand-coral/10 border-2 border-brand-coral/30 rounded-xl px-3 py-2">
+                      <span className="w-5 h-5 rounded-full bg-brand-coral text-white flex items-center justify-center flex-shrink-0">
+                        {ICONS.warn}
+                      </span>
+                      Cobro parcial — quedan {fmt(cobroBalance)} en CxC
+                    </div>
+                  )}
+                  {total > 0 && montoCobro > total && (
+                    <div className="flex items-center gap-2 text-xs font-bold text-brand-wood bg-brand-wood/10 border-2 border-brand-wood/30 rounded-xl px-3 py-2">
+                      <span className="w-5 h-5 rounded-full bg-brand-wood text-white flex items-center justify-center flex-shrink-0">
+                        {ICONS.check}
+                      </span>
+                      Pago mayor al total (+{fmt(montoCobro - total)})
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
             {!cobrar && estatus !== 'fallida' && total > 0 && (
-              <p className="text-xs text-gray-400 text-center -mt-2">
-                Sin cobro → {fmt(total)} quedará como <span className="font-semibold text-amber-600">debe</span> en CxC
-              </p>
+              <div className="flex items-start gap-2 text-xs text-brand-coral bg-brand-coral/10 border-2 border-brand-coral/30 rounded-xl px-3 py-2.5">
+                {ICONS.warn}
+                <p className="font-semibold">
+                  Sin cobro · <span className="font-black">{fmt(total)}</span> quedará como deuda en Cuentas por Cobrar
+                </p>
+              </div>
             )}
 
             {error && (
-              <p className="text-xs text-red-500 font-semibold bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+              <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border-2 border-red-200 rounded-xl px-3 py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <span className="font-medium">{error}</span>
+              </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
+          <div className="px-6 py-4 border-t border-brand-wood/10 flex gap-3 flex-shrink-0 bg-brand-cream/20">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-3 border-2 border-brand-wood/15 rounded-xl text-sm font-black uppercase tracking-widest text-brand-wood-soft hover:bg-white hover:text-brand-wood transition-colors">
+              Cancelar
+            </button>
             <button
               type="submit"
               disabled={saving || !pedidoId}
-              className="w-full bg-brand-berry text-white font-black py-3 rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
+              className="flex-[2] btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? (
-                <span className="animate-pulse">Guardando...</span>
-              ) : (
+              {saving ? 'Guardando...' : (
                 <>
-                  <span>{cobrar ? 'Registrar entrega + cobro' : 'Registrar entrega'}</span>
-                  {total > 0 && <span className="opacity-80">· {fmt(total)}</span>}
+                  {cobrar ? 'Registrar entrega + cobro' : 'Registrar entrega'}
+                  {total > 0 && ` · ${fmt(total)}`}
                 </>
               )}
             </button>
