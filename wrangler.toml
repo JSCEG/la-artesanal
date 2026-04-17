@@ -1,3 +1,7 @@
 name = "la-artesanal"
 compatibility_date = "2026-04-16"
-pages_build_output_dir = "dist"
+pages_build_output_dir = "./dist"
+keep_vars = true
+
+[build]
+command = "npm run build"
