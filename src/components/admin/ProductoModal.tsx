@@ -13,6 +13,30 @@ const EMPTY: ProductoFormData = {
   unit: 'pieza', is_active: true, precio_minorista: null, precio_mayorista: null, photo_url: null,
 }
 
+const ICONS = {
+  close: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/>
+    </svg>
+  ),
+  camera: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/>
+      <circle cx="12" cy="13" r="3.5"/>
+    </svg>
+  ),
+  warn: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+    </svg>
+  ),
+  trash: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/>
+    </svg>
+  ),
+}
+
 export default function ProductoModal({ producto, onClose, onSaved }: Props) {
   const [form, setForm] = useState<ProductoFormData>(EMPTY)
   const [loading, setLoading] = useState(false)
@@ -48,10 +72,8 @@ export default function ProductoModal({ producto, onClose, onSaved }: Props) {
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    // Preview local inmediato
     setPhotoPreview(URL.createObjectURL(file))
     setUploadingPhoto(true)
-    // Subir a Supabase Storage (usamos un ID temporal si es nuevo)
     const tempId = producto?.id ?? `new-${Date.now()}`
     const url = await uploadProductPhoto(file, tempId)
     if (url) { set('photo_url', url); setPhotoPreview(url) }
@@ -76,147 +98,178 @@ export default function ProductoModal({ producto, onClose, onSaved }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white w-full sm:max-w-xl rounded-t-[2rem] sm:rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.25)] max-h-[94vh] flex flex-col border border-white/60">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
-          <h2 className="font-black text-brand-coffee text-lg">
-            {isEdit ? 'Editar producto' : 'Nuevo producto'}
-          </h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl">×</button>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-brand-wood/10 flex-shrink-0">
+          <div>
+            <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">
+              {isEdit ? 'Editar producto' : 'Nuevo producto'}
+            </h2>
+            <p className="text-xs text-brand-wood-soft font-medium mt-0.5">
+              {isEdit ? 'Actualiza datos, precios y foto' : 'Define nombre, categoría, precios y foto del producto'}
+            </p>
+          </div>
+          <button onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-cream/60 text-brand-wood-soft hover:text-brand-berry transition-colors">
+            {ICONS.close}
+          </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Nombre */}
-            <div className="sm:col-span-2">
-              <label className="label">Nombre *</label>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Nombre *</label>
               <input value={form.name} onChange={e => set('name', e.target.value)}
-                className="input" placeholder="Ej: Paleta de Tamarindo" required />
+                className="input w-full" placeholder="Ej: Paleta de Tamarindo" required />
             </div>
 
-            {/* Categoría */}
-            <div>
-              <label className="label">Categoría</label>
-              <select value={form.category} onChange={e => set('category', e.target.value)} className="input">
-                {CATEGORIAS_PRODUCTO.map(c => <option key={c}>{c}</option>)}
-              </select>
+            {/* Categoría + Unidad */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Categoría</label>
+                <select value={form.category} onChange={e => set('category', e.target.value)} className="input w-full">
+                  {CATEGORIAS_PRODUCTO.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Unidad</label>
+                <select value={form.unit} onChange={e => set('unit', e.target.value)} className="input w-full">
+                  {UNIDADES.map(u => <option key={u}>{u}</option>)}
+                </select>
+              </div>
             </div>
 
-            {/* Unidad */}
-            <div>
-              <label className="label">Unidad</label>
-              <select value={form.unit} onChange={e => set('unit', e.target.value)} className="input">
-                {UNIDADES.map(u => <option key={u}>{u}</option>)}
-              </select>
-            </div>
-
-            {/* SKU */}
-            <div>
-              <label className="label">SKU</label>
-              <input value={form.sku} onChange={e => set('sku', e.target.value)}
-                className="input" placeholder="Ej: PAL-013" />
-            </div>
-
-            {/* Activo */}
-            <div className="flex items-center gap-3 pt-5">
-              <button type="button" onClick={() => set('is_active', !form.is_active)}
-                className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 overflow-hidden ${form.is_active ? 'bg-brand-berry' : 'bg-gray-200'}`}>
-                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${form.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-              <span className="text-sm font-semibold text-gray-700">{form.is_active ? 'Activo' : 'Inactivo'}</span>
+            {/* SKU + activo */}
+            <div className="grid grid-cols-2 gap-4 items-end">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">SKU</label>
+                <input value={form.sku} onChange={e => set('sku', e.target.value)}
+                  className="input w-full font-mono" placeholder="Ej: PAL-013" />
+              </div>
+              <div className="flex items-center gap-3 pb-2">
+                <button type="button" onClick={() => set('is_active', !form.is_active)}
+                  className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 overflow-hidden ${form.is_active ? 'bg-brand-teal' : 'bg-brand-wood/15'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${form.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+                <span className="text-sm font-bold text-brand-wood">{form.is_active ? 'Activo' : 'Inactivo'}</span>
+              </div>
             </div>
 
             {/* Descripción */}
-            <div className="sm:col-span-2">
-              <label className="label">Descripción</label>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Descripción</label>
               <textarea value={form.description} onChange={e => set('description', e.target.value)}
-                className="input resize-none h-20" placeholder="Breve descripción del producto..." />
+                className="input w-full resize-none" rows={2} placeholder="Breve descripción del producto…" />
             </div>
 
-            {/* Precios */}
-            <div>
-              <label className="label">Precio minorista (MXN)</label>
-              <input type="number" min="0" step="1"
-                value={form.precio_minorista ?? ''}
-                onChange={e => set('precio_minorista', e.target.value ? Number(e.target.value) : null)}
-                className="input" placeholder="0" />
-            </div>
-            <div>
-              <label className="label">Precio mayorista (MXN)</label>
-              <input type="number" min="0" step="1"
-                value={form.precio_mayorista ?? ''}
-                onChange={e => set('precio_mayorista', e.target.value ? Number(e.target.value) : null)}
-                className="input" placeholder="0" />
-            </div>
-          </div>
-
-          {/* Foto del producto */}
-          <div className="sm:col-span-2">
-            <label className="label">Foto del producto</label>
-
-            {/* Preview */}
-            {photoPreview ? (
-              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-200 mb-2 group">
-                <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
-                {uploadingPhoto && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="text-white text-sm font-semibold animate-pulse">Subiendo...</span>
+            {/* Precios — card destacada */}
+            <div className="rounded-2xl p-4 space-y-3 border-2 bg-gradient-to-br from-brand-berry/5 to-brand-berry/10 border-brand-berry/20">
+              <p className="text-[10px] font-black uppercase tracking-widest text-brand-berry">Precios de venta</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Minorista</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-lg font-black text-brand-wood-soft pointer-events-none select-none">$</span>
+                    <input type="number" min="0" step="1"
+                      value={form.precio_minorista ?? ''}
+                      onChange={e => set('precio_minorista', e.target.value ? Number(e.target.value) : null)}
+                      className="input w-full !pl-10 font-display text-lg font-black" placeholder="0" />
                   </div>
-                )}
-                {!uploadingPhoto && (
-                  <button type="button" onClick={handleRemovePhoto}
-                    className="absolute top-2 right-2 bg-black/60 text-white w-7 h-7 rounded-full text-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100">
-                    ×
-                  </button>
-                )}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Mayorista</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-lg font-black text-brand-wood-soft pointer-events-none select-none">$</span>
+                    <input type="number" min="0" step="1"
+                      value={form.precio_mayorista ?? ''}
+                      onChange={e => set('precio_mayorista', e.target.value ? Number(e.target.value) : null)}
+                      className="input w-full !pl-10 font-display text-lg font-black" placeholder="0" />
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-32 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-brand-berry hover:bg-brand-berry/5 transition-all mb-2"
-              >
-                <span className="text-2xl">📷</span>
-                <span className="text-xs text-gray-400 font-medium">Click para subir imagen</span>
-                <span className="text-xs text-gray-300">JPG, PNG, WEBP — máx 5MB</span>
+            </div>
+
+            {/* Foto */}
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Foto del producto</label>
+
+              {photoPreview ? (
+                <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-brand-wood/10 mb-2 group">
+                  <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                      <div className="flex items-center gap-2 text-white">
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        <span className="text-sm font-bold">Subiendo…</span>
+                      </div>
+                    </div>
+                  )}
+                  {!uploadingPhoto && (
+                    <button type="button" onClick={handleRemovePhoto}
+                      className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-brand-berry transition-colors opacity-0 group-hover:opacity-100">
+                      {ICONS.trash}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-32 border-2 border-dashed border-brand-wood/15 rounded-2xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-brand-berry/40 hover:bg-brand-berry/5 transition-all mb-2 text-brand-wood-soft hover:text-brand-berry"
+                >
+                  {ICONS.camera}
+                  <span className="text-xs font-bold uppercase tracking-widest">Click para subir imagen</span>
+                  <span className="text-[10px] text-brand-wood-soft">JPG, PNG, WEBP — máx 5MB</span>
+                </div>
+              )}
+
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                onChange={handleFileChange} />
+
+              {/* Separador "o pegar URL" */}
+              <div className="flex items-center gap-2 mt-3">
+                <div className="flex-1 h-px bg-brand-wood/10" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">O pegar URL</span>
+                <div className="flex-1 h-px bg-brand-wood/10" />
+              </div>
+              <input
+                type="url"
+                value={form.photo_url && !form.photo_url.startsWith('blob:') ? form.photo_url : ''}
+                onChange={e => { set('photo_url', e.target.value || null); setPhotoPreview(e.target.value || null) }}
+                className="input w-full mt-2"
+                placeholder="https://ejemplo.com/imagen.jpg"
+              />
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="flex items-start gap-2 bg-brand-berry/10 border-2 border-brand-berry/25 rounded-xl px-4 py-3">
+                <span className="text-brand-berry mt-0.5">{ICONS.warn}</span>
+                <p className="text-xs text-brand-berry font-bold flex-1">{error}</p>
               </div>
             )}
-
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
-              onChange={handleFileChange} />
-
-            {/* O pegar URL */}
-            <div className="flex items-center gap-2 mt-2">
-              <div className="flex-1 h-px bg-gray-100" />
-              <span className="text-xs text-gray-400">o pegar URL</span>
-              <div className="flex-1 h-px bg-gray-100" />
-            </div>
-            <input
-              type="url"
-              value={form.photo_url && !form.photo_url.startsWith('blob:') ? form.photo_url : ''}
-              onChange={e => { set('photo_url', e.target.value || null); setPhotoPreview(e.target.value || null) }}
-              className="input mt-2"
-              placeholder="https://ejemplo.com/imagen.jpg"
-            />
           </div>
 
-          {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+          {/* Footer */}
+          <div className="flex items-center gap-3 px-6 py-4 border-t border-brand-wood/10 bg-brand-cream/20 flex-shrink-0">
+            <button type="button" onClick={onClose} disabled={loading}
+              className="flex-1 px-4 py-2.5 rounded-xl border-2 border-brand-wood/15 text-brand-wood font-black text-[11px] uppercase tracking-widest hover:bg-white transition-colors disabled:opacity-50">
+              Cancelar
+            </button>
+            <button type="submit" disabled={loading}
+              className="btn-primary flex-[2] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Guardando…
+                </>
+              ) : isEdit ? 'Guardar cambios' : 'Crear producto'}
+            </button>
+          </div>
         </form>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
-          <button type="button" onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">
-            Cancelar
-          </button>
-          <button onClick={handleSubmit} disabled={loading}
-            className="flex-1 py-2.5 bg-brand-berry text-white rounded-xl text-sm font-bold hover:opacity-90 disabled:opacity-50">
-            {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear producto'}
-          </button>
-        </div>
       </div>
     </div>
   )
