@@ -1,21 +1,24 @@
-# Node
-node_modules/
+# Logs
+logs
+*.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Env & secrets
-.env
-.env.local
-.env*.local
+node_modules
+dist
+dist-ssr
+*.local
 
-# OS
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-Thumbs.db
-
-# Editor
-.vscode/
 *.suo
-*.user
-
-# Build output
-dist/
-.output/
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

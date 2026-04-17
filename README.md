@@ -1,50 +1,73 @@
-# La Artesanal
+# React + TypeScript + Vite
 
-Base inicial para una plataforma web de ventas y operacion para `La Artesanal`, compatible con `Cloudflare Pages` y `Supabase`.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Incluye
+Currently, two official plugins are available:
 
-- Landing publica con branding artesanal basado en el nuevo logo.
-- Catalogo publico con mas de 30 sabores.
-- Precios por perfil comercial `mayorista` y `minorista`.
-- Login preparado para `email/password` y `Google` con Supabase.
-- Pedido rapido y formulario de contacto listos para persistir en Supabase.
-- Panel admin demo con indicadores, mapa Leaflet y grafica.
-- SQL de esquema y seed inicial en [`supabase/schema.sql`](/C:/Proyectos/67.-Paletas/supabase/schema.sql) y [`supabase/seed.sql`](/C:/Proyectos/67.-Paletas/supabase/seed.sql).
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Estructura
+## React Compiler
 
-- [`index.html`](/C:/Proyectos/67.-Paletas/index.html): app principal.
-- [`qr.html`](/C:/Proyectos/67.-Paletas/qr.html): landing para QR.
-- [`css/styles.css`](/C:/Proyectos/67.-Paletas/css/styles.css): sistema visual y responsive.
-- [`js/config.js`](/C:/Proyectos/67.-Paletas/js/config.js): configuracion local.
-- [`js/catalog.js`](/C:/Proyectos/67.-Paletas/js/catalog.js): catalogo y datos demo.
-- [`js/supabase.js`](/C:/Proyectos/67.-Paletas/js/supabase.js): cliente Supabase.
-- [`js/app.js`](/C:/Proyectos/67.-Paletas/js/app.js): logica de UI.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Activar Supabase
+## Expanding the ESLint configuration
 
-1. Crea un proyecto en Supabase.
-2. Ejecuta el contenido de [`supabase/schema.sql`](/C:/Proyectos/67.-Paletas/supabase/schema.sql).
-3. Ejecuta luego [`supabase/seed.sql`](/C:/Proyectos/67.-Paletas/supabase/seed.sql).
-4. Edita [`js/config.js`](/C:/Proyectos/67.-Paletas/js/config.js) con:
-   - `supabaseUrl`
-   - `supabaseAnonKey`
-   - telefono, correo y WhatsApp reales
-5. En Supabase Auth activa:
-   - Email/Password
-   - Google
-6. Configura la URL del sitio y redirect URL al dominio donde quedara en Cloudflare Pages.
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## Despliegue en Cloudflare Pages
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-No requiere build. Puedes publicar directamente este directorio como sitio estatico.
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-- Build command: vacio
-- Build output directory: `/`
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-## Siguiente paso recomendado
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-- conectar el panel admin a tablas reales de pedidos, stock y pagos
-- separar vistas por rol
-- mover formularios a Edge Functions o Workers para correo y validaciones
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
