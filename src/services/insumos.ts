@@ -47,7 +47,11 @@ export async function getInsumos(): Promise<Insumo[]> {
   return (data ?? []) as Insumo[]
 }
 
-export async function upsertInsumo(form: InsumoFormData, id?: string) {
+export async function upsertInsumo(
+  form: InsumoFormData,
+  id?: string,
+  stockInicial?: number,
+) {
   const payload = {
     nombre: form.nombre.trim(),
     unidad: form.unidad.trim() || 'pz',
@@ -58,7 +62,20 @@ export async function upsertInsumo(form: InsumoFormData, id?: string) {
     activo: form.activo,
   }
   if (id) return supabase.from('insumos').update(payload).eq('id', id).select().single()
-  return supabase.from('insumos').insert(payload).select().single()
+
+  const res = await supabase.from('insumos').insert(payload).select().single()
+  // Si crea + stock inicial > 0 → genera movimiento entrada auto
+  if (!res.error && res.data && stockInicial && stockInicial > 0) {
+    const { data: auth } = await supabase.auth.getUser()
+    await supabase.from('insumo_movimientos').insert({
+      insumo_id: res.data.id,
+      tipo: 'entrada',
+      cantidad: stockInicial,
+      motivo: 'Carga inicial',
+      created_by: auth?.user?.id ?? null,
+    })
+  }
+  return res
 }
 
 export async function deleteInsumo(id: string) {

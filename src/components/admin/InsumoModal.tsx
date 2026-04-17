@@ -31,8 +31,10 @@ const ICON_WARN = (
 
 export default function InsumoModal({ insumo, onClose, onSaved }: Props) {
   const [form, setForm] = useState<InsumoFormData>(EMPTY)
+  const [stockInicial, setStockInicial] = useState<number>(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const isNew = !insumo
 
   useEffect(() => {
     setForm(insumo ? {
@@ -44,6 +46,7 @@ export default function InsumoModal({ insumo, onClose, onSaved }: Props) {
       notas: insumo.notas ?? '',
       activo: insumo.activo,
     } : EMPTY)
+    setStockInicial(0)
     setError('')
   }, [insumo])
 
@@ -54,7 +57,7 @@ export default function InsumoModal({ insumo, onClose, onSaved }: Props) {
     if (!form.nombre.trim()) { setError('El nombre es requerido'); return }
     setLoading(true); setError('')
     try {
-      const { error } = await upsertInsumo(form, insumo?.id)
+      const { error } = await upsertInsumo(form, insumo?.id, isNew ? stockInicial : undefined)
       if (error) { setError(error.message); setLoading(false); return }
       onSaved()
     } catch (err: any) {
@@ -104,6 +107,20 @@ export default function InsumoModal({ insumo, onClose, onSaved }: Props) {
                   className="input w-full font-mono" placeholder="0" />
               </div>
             </div>
+
+            {isNew && (
+              <div className="rounded-2xl p-4 bg-gradient-to-br from-brand-teal/10 to-brand-teal/5 border-2 border-brand-teal/25">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-teal mb-1.5">
+                  Stock inicial ({form.unidad})
+                </label>
+                <input type="number" min="0" step="0.001" value={stockInicial || ''}
+                  onChange={e => setStockInicial(Number(e.target.value))}
+                  className="input w-full font-display text-xl font-black" placeholder="0" />
+                <p className="text-[10px] text-brand-wood-soft font-medium mt-1.5">
+                  Genera un movimiento de entrada automático al guardar. Déjalo en 0 si aún no hay existencias.
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Costo unitario (MXN)</label>

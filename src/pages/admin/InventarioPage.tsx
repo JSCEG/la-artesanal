@@ -19,8 +19,10 @@ const ICON_ALERT = (
 
 const fmtMoney = (n: number) => `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 
-type EstadoStock = 'ok' | 'bajo' | 'agotado'
+type EstadoStock = 'ok' | 'bajo' | 'agotado' | 'vacio'
 function estadoStock(i: Insumo): EstadoStock {
+  // Sin stock y sin mínimo definido → neutro (recién creado, aún no se usa)
+  if (i.stock_actual <= 0 && i.stock_minimo <= 0) return 'vacio'
   if (i.stock_actual <= 0) return 'agotado'
   if (i.stock_actual < i.stock_minimo) return 'bajo'
   return 'ok'
@@ -60,8 +62,9 @@ export default function InventarioPage() {
   const metricas = useMemo(() => {
     const bajos = insumos.filter(i => estadoStock(i) === 'bajo').length
     const agotados = insumos.filter(i => estadoStock(i) === 'agotado').length
+    const ok = insumos.filter(i => estadoStock(i) === 'ok').length
     const valor = insumos.reduce((s, i) => s + i.stock_actual * i.costo_unitario, 0)
-    return { total: insumos.length, bajos, agotados, valor }
+    return { total: insumos.length, bajos, agotados, ok, valor }
   }, [insumos])
 
   const filtrados = useMemo(() => {
@@ -105,7 +108,7 @@ export default function InventarioPage() {
         </div>
         <div className="bg-brand-teal/5 border-2 border-brand-teal/25 rounded-2xl px-4 py-3">
           <p className="text-[10px] font-black uppercase tracking-widest text-brand-teal">OK</p>
-          <p className="font-display text-2xl font-black text-brand-teal mt-1">{metricas.total - metricas.bajos - metricas.agotados}</p>
+          <p className="font-display text-2xl font-black text-brand-teal mt-1">{metricas.ok}</p>
           <p className="text-xs text-brand-wood-soft mt-0.5">En niveles normales</p>
         </div>
         <div className={`rounded-2xl px-4 py-3 border-2 ${metricas.bajos > 0 ? 'bg-brand-coral/10 border-brand-coral/30' : 'bg-white border-brand-wood/10'}`}>
@@ -167,6 +170,7 @@ export default function InventarioPage() {
                 <div className={`w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 ${
                   estado === 'agotado' ? 'bg-brand-berry/10 text-brand-berry border-brand-berry/30' :
                   estado === 'bajo'    ? 'bg-brand-coral/15 text-brand-coral border-brand-coral/30' :
+                  estado === 'vacio'   ? 'bg-brand-wood/5 text-brand-wood-soft border-brand-wood/20' :
                                          'bg-brand-teal/10 text-brand-teal border-brand-teal/30'
                 }`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/></svg>
@@ -186,6 +190,11 @@ export default function InventarioPage() {
                     {estado === 'agotado' && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-brand-berry/10 text-brand-berry border border-brand-berry/30 px-2 py-0.5 rounded-full">
                         {ICON_ALERT} Agotado
+                      </span>
+                    )}
+                    {estado === 'vacio' && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-brand-wood/5 text-brand-wood-soft border border-brand-wood/15 px-2 py-0.5 rounded-full">
+                        Sin stock
                       </span>
                     )}
                   </div>
