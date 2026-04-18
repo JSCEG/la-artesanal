@@ -68,30 +68,21 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
   }
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full relative">
-      {/* Patrón de puntos decorativo */}
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
-           style={{
-             backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-             backgroundSize: '14px 14px',
-           }} />
-
+    <div className="flex flex-col h-full bg-white">
       {/* Logo header */}
-      <div className="px-5 py-5 border-b border-white/10 relative">
+      <div className="px-5 py-5">
         <div className="flex items-center gap-3">
-          <span className="logo-glass rounded-full p-1 bg-white/15 border-white/30">
-            <img src={LOGO_URL} alt="La Artesanal"
-              className="w-10 h-10 rounded-full border border-white/40 bg-white/90" />
-          </span>
+          <img src={LOGO_URL} alt="La Artesanal"
+            className="w-9 h-9 rounded-full border border-brand-wood/10" />
           <div>
-            <p className="text-white font-display font-black text-base leading-none">La Artesanal</p>
-            <p className="text-white/60 text-[10px] uppercase tracking-widest mt-1 font-bold">Panel interno</p>
+            <p className="text-brand-wood font-display font-black text-base leading-none">La Artesanal</p>
+            <p className="text-brand-wood-soft text-[9px] uppercase tracking-[0.2em] mt-1 font-bold">Admin</p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto relative">
+      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(item => (
           <NavLink
             key={item.to}
@@ -99,26 +90,22 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
             end={item.end}
             onClick={() => setSidebarOpen(false)}
             className={({ isActive }) =>
-              `group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              `group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                 isActive
-                  ? 'bg-white text-brand-wood shadow-[4px_4px_0_rgba(0,0,0,0.15)] -translate-y-0.5'
-                  : 'text-white/75 hover:bg-white/10 hover:text-white'
+                  ? 'bg-brand-berry/8 text-brand-berry'
+                  : 'text-brand-wood/65 hover:bg-brand-cream/50 hover:text-brand-wood'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                  isActive
-                    ? `bg-gradient-to-br ${item.accent} text-white shadow-md`
-                    : 'bg-white/10 text-white/80 group-hover:bg-white/20'
-                }`}>
-                  <item.icon className="w-4 h-4" />
-                </span>
-                <span>{item.label}</span>
                 {isActive && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-berry" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-brand-berry" />
                 )}
+                <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                  isActive ? 'text-brand-berry' : 'text-brand-wood/50 group-hover:text-brand-wood'
+                }`} />
+                <span className="tracking-tight">{item.label}</span>
               </>
             )}
           </NavLink>
@@ -126,24 +113,24 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
       </nav>
 
       {/* Usuario + Salir */}
-      <div className="px-4 py-4 border-t border-white/10 relative">
-        <div className="flex items-center gap-3 mb-3 bg-white/5 rounded-xl p-3 border border-white/10">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-berry to-brand-berry-soft flex items-center justify-center flex-shrink-0 shadow-md">
-            <span className="text-white text-sm font-black">
+      <div className="px-3 py-3 border-t border-brand-wood/8">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <div className="w-8 h-8 rounded-full bg-brand-berry/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-brand-berry text-xs font-black">
               {profile?.full_name?.[0]?.toUpperCase() || '?'}
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-white text-sm font-bold truncate leading-tight">{profile?.full_name || 'Usuario'}</p>
-            <p className="text-white/50 text-[10px] uppercase tracking-widest font-bold mt-0.5">{profile?.role}</p>
+            <p className="text-brand-wood text-sm font-bold truncate leading-tight">{profile?.full_name || 'Usuario'}</p>
+            <p className="text-brand-wood-soft text-[9px] uppercase tracking-widest font-bold mt-0.5">{profile?.role}</p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-brand-berry border-2 border-white/20 hover:border-brand-berry text-white text-sm font-bold py-2.5 rounded-xl transition-all group"
+          className="mt-1 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-brand-wood/65 hover:bg-brand-berry/8 hover:text-brand-berry transition-colors group"
         >
-          <Icon.logout className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          Cerrar sesión
+          <Icon.logout className="w-[18px] h-[18px] shrink-0 text-brand-wood/50 group-hover:text-brand-berry transition-colors" />
+          <span className="tracking-tight">Cerrar sesión</span>
         </button>
       </div>
     </div>
@@ -158,8 +145,7 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
          }}>
 
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex w-60 flex-col flex-shrink-0 relative overflow-hidden"
-             style={{ background: 'linear-gradient(180deg, #5b3822 0%, #3a2416 100%)' }}>
+      <aside className="hidden md:flex w-60 flex-col flex-shrink-0 relative overflow-hidden bg-white border-r border-brand-wood/10">
         <SidebarContent />
       </aside>
 
@@ -170,8 +156,7 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="fixed left-0 top-0 h-full w-72 z-50 md:hidden flex flex-col overflow-hidden shadow-2xl"
-                 style={{ background: 'linear-gradient(180deg, #5b3822 0%, #3a2416 100%)' }}>
+          <aside className="fixed left-0 top-0 h-full w-72 z-50 md:hidden flex flex-col overflow-hidden shadow-2xl bg-white border-r border-brand-wood/10">
             <SidebarContent />
           </aside>
         </>
@@ -181,7 +166,7 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Header glass */}
-        <header className="glass-panel px-4 md:px-6 h-16 flex items-center gap-3 flex-shrink-0 border-b border-brand-berry/10">
+        <header className="bg-white px-4 md:px-6 h-16 flex items-center gap-3 flex-shrink-0 border-b border-brand-wood/10">
           {/* Hamburger móvil */}
           <button
             onClick={() => setSidebarOpen(true)}
