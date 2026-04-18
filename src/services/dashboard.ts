@@ -58,6 +58,7 @@ export interface AlertasOperativas {
   stock: AlertaStock[]
   cxc: AlertaCxC[]
   pedidos: AlertaPedido[]
+  enRuta: number   // pedidos actualmente en ruta (para badge sidebar Entregas)
 }
 
 export interface TopProducto {
@@ -229,6 +230,12 @@ export async function getAlertasOperativas(): Promise<AlertasOperativas> {
       .limit(20),
   ])
 
+  // Count pedidos en ruta (para badge)
+  const { count: enRutaCount } = await supabase
+    .from('pedidos')
+    .select('*', { count: 'exact', head: true })
+    .eq('estatus', 'en_ruta')
+
   // Stock bajo/agotado (solo con mínimo definido > 0)
   const stock: AlertaStock[] = (insumosData ?? [])
     .filter((i: any) => i.stock_minimo > 0 && i.stock_actual <= i.stock_minimo)
@@ -310,7 +317,7 @@ export async function getAlertasOperativas(): Promise<AlertasOperativas> {
     }
   })
 
-  return { stock, cxc, pedidos }
+  return { stock, cxc, pedidos, enRuta: enRutaCount ?? 0 }
 }
 
 // ─── Ventas por sucursal — últimos N meses ───────────────────────────────────

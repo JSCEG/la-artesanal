@@ -146,17 +146,32 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
               }`
             }
           >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-brand-berry" />
-                )}
-                <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
-                  isActive ? 'text-brand-berry' : 'text-brand-wood/50 group-hover:text-brand-wood'
-                }`} />
-                <span className="tracking-tight">{item.label}</span>
-              </>
-            )}
+            {({ isActive }) => {
+              const badgeCount =
+                item.to === '/admin/entregas' ? (alertas?.enRuta ?? 0) :
+                item.to === '/admin/pedidos'  ? (alertas?.pedidos.length ?? 0) :
+                0
+              return (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-brand-berry" />
+                  )}
+                  <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                    isActive ? 'text-brand-berry' : 'text-brand-wood/50 group-hover:text-brand-wood'
+                  }`} />
+                  <span className="tracking-tight flex-1">{item.label}</span>
+                  {badgeCount > 0 && (
+                    <span className={`text-[10px] font-black px-1.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center ${
+                      item.to === '/admin/entregas'
+                        ? 'bg-brand-coral/15 text-brand-coral'
+                        : 'bg-brand-teal/15 text-brand-teal'
+                    }`}>
+                      {badgeCount > 99 ? '99+' : badgeCount}
+                    </span>
+                  )}
+                </>
+              )
+            }}
           </NavLink>
         ))}
       </nav>
