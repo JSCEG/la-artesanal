@@ -8,10 +8,12 @@ import {
   getPedidosRecientes,
   getTopProductos,
   getAlertasOperativas,
+  getProductosSinReceta,
   type DashboardMetrics,
   type PedidoReciente,
   type TopProducto,
   type AlertasOperativas,
+  type ProductoSinReceta,
 } from '../../services/dashboard'
 import type { EstatusPedido } from '../../services/pedidos'
 
@@ -94,22 +96,25 @@ export default function DashboardPage() {
   const [recientes, setRecientes] = useState<PedidoReciente[]>([])
   const [topProductos, setTopProductos] = useState<TopProducto[]>([])
   const [alertas, setAlertas] = useState<AlertasOperativas | null>(null)
+  const [sinReceta, setSinReceta] = useState<ProductoSinReceta[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancel = false
     async function load() {
-      const [m, r, t, a] = await Promise.all([
+      const [m, r, t, a, sr] = await Promise.all([
         getDashboardMetrics(),
         getPedidosRecientes(5),
         getTopProductos(5),
         getAlertasOperativas(),
+        getProductosSinReceta(),
       ])
       if (!cancel) {
         setMetrics(m)
         setRecientes(r)
         setTopProductos(t)
         setAlertas(a)
+        setSinReceta(sr)
         setLoading(false)
       }
     }
@@ -407,6 +412,48 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* ── Productos vendidos sin receta ── */}
+      {!loading && sinReceta.length > 0 && (
+        <div className="bg-white rounded-3xl border-2 border-brand-coral/30 shadow-[0_4px_24px_rgba(255,131,107,0.08)] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-3 mb-5 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-xl bg-brand-coral/15 text-brand-coral flex items-center justify-center border border-brand-coral/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                </span>
+                <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Productos sin receta</h2>
+              </div>
+              <p className="text-sm text-brand-wood-soft font-medium mt-1 ml-10">
+                Vendidos este mes pero sin BOM. No descuentan inventario.
+              </p>
+            </div>
+            <Link to="/admin/catalogo" className="text-xs font-black uppercase tracking-widest text-brand-coral hover:opacity-70 flex items-center gap-1">
+              Ir al catálogo
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </Link>
+          </div>
+
+          <ul className="divide-y divide-brand-wood/5">
+            {sinReceta.slice(0, 8).map(p => (
+              <li key={p.producto_id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-sm text-brand-wood truncate">{p.nombre}</p>
+                  <p className="text-[10px] text-brand-wood-soft font-semibold">
+                    {p.cantidad_vendida} {p.unidad} vendidos
+                  </p>
+                </div>
+                <p className="font-display text-sm font-black text-brand-coral flex-shrink-0">{fmtMXN(p.ingresos)}</p>
+              </li>
+            ))}
+          </ul>
+          {sinReceta.length > 8 && (
+            <p className="text-[11px] text-brand-wood-soft font-bold mt-3 text-center">
+              +{sinReceta.length - 8} producto(s) más sin receta
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Accesos rápidos */}
       <div className="bg-white rounded-3xl border border-brand-wood/10 shadow-[0_4px_24px_rgba(177,48,107,0.06)] p-6 md:p-8">

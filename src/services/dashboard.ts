@@ -379,6 +379,58 @@ export async function getVentasPorSucursal(meses = 6): Promise<Map<string, Venta
   return result
 }
 
+// ─── Productos vendidos sin receta ────────────────────────────────────────────
+
+export interface ProductoSinReceta {
+  producto_id: number
+  nombre: string
+  unidad: string
+  cantidad_vendida: number
+  ingresos: number
+}
+
+export async function getProductosSinReceta(): Promise<ProductoSinReceta[]> {
+  const mesInicio = startOfMonth()
+
+  const [{ data: detalles }, { data: recetas }] = await Promise.all([
+    supabase
+      .from('pedido_detalle')
+      .select(`
+        producto_id,
+        cantidad,
+        precio_unit,
+        producto:products(name, unit),
+        pedido:pedidos!inner(fecha_pedido, estatus)
+      `)
+      .gte('pedido.fecha_pedido', mesInicio)
+      .in('pedido.estatus', ['confirmado', 'en_ruta', 'entregado']),
+    supabase.from('recetas').select('producto_id').eq('activo', true),
+  ])
+
+  const conReceta = new Set((recetas ?? []).map((r: any) => r.producto_id))
+  const map = new Map<number, ProductoSinReceta>()
+
+  for (const row of detalles ?? []) {
+    const r = row as any
+    const id = r.producto_id
+    if (conReceta.has(id)) continue
+    if (!map.has(id)) {
+      map.set(id, {
+        producto_id: id,
+        nombre: r.producto?.name ?? `Producto #${id}`,
+        unidad: r.producto?.unit ?? '',
+        cantidad_vendida: 0,
+        ingresos: 0,
+      })
+    }
+    const item = map.get(id)!
+    item.cantidad_vendida += r.cantidad
+    item.ingresos += r.cantidad * r.precio_unit
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.ingresos - a.ingresos)
+}
+
 // ─── Top productos (por cantidad vendida en el mes) ──────────────────────────
 
 export async function getTopProductos(limit = 5): Promise<TopProducto[]> {
