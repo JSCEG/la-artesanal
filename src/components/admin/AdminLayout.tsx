@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom'
 import { useSession } from '../../hooks/useSession'
 import Breadcrumb, { type BreadcrumbItem } from './Breadcrumb'
+import { getAlertasOperativas, type AlertasOperativas } from '../../services/dashboard'
 
 const LOGO_URL = 'https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png'
 
@@ -61,11 +62,35 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
   const { profile, signOut } = useSession()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [alertas, setAlertas] = useState<AlertasOperativas | null>(null)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
   }
+
+  // Cargar alertas al montar + cada 2 min
+  useEffect(() => {
+    let cancel = false
+    const load = () => getAlertasOperativas().then(a => { if (!cancel) setAlertas(a) }).catch(() => {})
+    load()
+    const id = setInterval(load, 120_000)
+    return () => { cancel = true; clearInterval(id) }
+  }, [])
+
+  // Click fuera cierra dropdown
+  useEffect(() => {
+    if (!notifOpen) return
+    const onClick = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [notifOpen])
+
+  const totalAlertas = (alertas?.stock.length ?? 0) + (alertas?.cxc.length ?? 0)
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white">
@@ -185,12 +210,94 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
             {profile?.role}
           </span>
 
-          {/* Campana */}
-          <button className="relative w-10 h-10 rounded-xl bg-white border border-brand-wood/10 hover:border-brand-berry hover:text-brand-berry flex items-center justify-center text-brand-wood transition-all shadow-sm"
-                  aria-label="Notificaciones">
-            <Icon.bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-coral border-2 border-white" />
-          </button>
+          {/* Campana + dropdown alertas */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setNotifOpen(o => !o)}
+              className="relative w-10 h-10 rounded-xl bg-white border border-brand-wood/10 hover:border-brand-berry hover:text-brand-berry flex items-center justify-center text-brand-wood transition-all shadow-sm"
+              aria-label="Notificaciones"
+            >
+              <Icon.bell className="w-5 h-5" />
+              {totalAlertas > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-berry text-white text-[10px] font-black flex items-center justify-center border-2 border-white">
+                  {totalAlertas > 9 ? '9+' : totalAlertas}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 top-12 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-brand-wood/10 shadow-2xl z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-brand-wood/10 flex items-center justify-between">
+                  <p className="font-display font-black text-brand-wood text-sm">Alertas</p>
+                  <span className="text-[10px] uppercase tracking-widest text-brand-wood-soft font-bold">
+                    {totalAlertas} pendiente{totalAlertas === 1 ? '' : 's'}
+                  </span>
+                </div>
+
+                <div className="max-h-[60vh] overflow-y-auto">
+                  {totalAlertas === 0 && (
+                    <div className="px-4 py-8 text-center">
+                      <div className="w-10 h-10 rounded-full bg-brand-teal/10 flex items-center justify-center mx-auto mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <p className="text-sm font-bold text-brand-wood">Todo en orden</p>
+                      <p className="text-xs text-brand-wood-soft font-medium">Sin alertas operativas.</p>
+                    </div>
+                  )}
+
+                  {alertas && alertas.stock.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-brand-coral/5 border-b border-brand-coral/10 flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-widest text-brand-coral font-black">Stock crítico</span>
+                        <Link to="/admin/inventario" onClick={() => setNotifOpen(false)} className="text-[10px] font-black uppercase tracking-widest text-brand-coral hover:text-brand-berry">Ver</Link>
+                      </div>
+                      <ul>
+                        {alertas.stock.slice(0, 4).map(i => (
+                          <li key={i.id} className="px-4 py-2.5 border-b border-brand-wood/5 last:border-0 flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold text-brand-wood truncate">{i.nombre}</p>
+                              <p className="text-[10px] font-mono text-brand-wood-soft font-bold">
+                                {i.stock_actual} / {i.stock_minimo} {i.unidad}
+                              </p>
+                            </div>
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border-2 flex-shrink-0 ${
+                              i.estado === 'agotado'
+                                ? 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'
+                                : 'bg-brand-coral/10 text-brand-coral border-brand-coral/30'
+                            }`}>
+                              {i.estado === 'agotado' ? 'AGOTADO' : 'BAJO'}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {alertas && alertas.cxc.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-brand-berry/5 border-b border-brand-berry/10 flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-widest text-brand-berry font-black">Cobranza vencida</span>
+                        <Link to="/admin/cobros" onClick={() => setNotifOpen(false)} className="text-[10px] font-black uppercase tracking-widest text-brand-berry hover:text-brand-berry-soft">Ver</Link>
+                      </div>
+                      <ul>
+                        {alertas.cxc.slice(0, 4).map(c => (
+                          <li key={c.cliente_id} className="px-4 py-2.5 border-b border-brand-wood/5 last:border-0 flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold text-brand-wood truncate">{c.nombre_comercial}</p>
+                              <p className="text-[10px] text-brand-wood-soft font-semibold">{c.dias_max} días máx.</p>
+                            </div>
+                            <p className="font-display text-sm font-black text-brand-berry flex-shrink-0">
+                              {c.saldo_vencido.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </header>
 
         {/* Contenido */}
