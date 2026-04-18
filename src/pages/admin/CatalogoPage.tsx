@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getProductosAdmin, toggleProductoActivo, CATEGORIAS_PRODUCTO } from '../../services/productos'
 import type { ProductoConPrecios } from '../../services/productos'
 import ProductoModal from '../../components/admin/ProductoModal'
+import RecetaModal from '../../components/admin/RecetaModal'
 import { formatCurrency } from '../../utils/format'
 import { TableRowSkeleton, CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
@@ -13,6 +14,7 @@ export default function CatalogoPage() {
   const [busqueda, setBusqueda] = useState('')
   const [categoria, setCategoria] = useState('Todos')
   const [modal, setModal] = useState<{ open: boolean; producto?: ProductoConPrecios | null }>({ open: false })
+  const [recetaModal, setRecetaModal] = useState<{ open: boolean; producto?: ProductoConPrecios | null }>({ open: false })
   const toast = useToast()
 
   useEffect(() => { fetchProductos() }, [])
@@ -162,7 +164,11 @@ export default function CatalogoPage() {
                         {p.is_active ? 'Activo' : 'Inactivo'}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <button onClick={() => setRecetaModal({ open: true, producto: p })}
+                        className="text-xs text-brand-teal font-black uppercase tracking-wide hover:opacity-70 mr-3">
+                        Receta
+                      </button>
                       <button onClick={() => setModal({ open: true, producto: p })}
                         className="text-xs text-brand-berry font-black uppercase tracking-wide hover:opacity-70">
                         Editar
@@ -203,6 +209,10 @@ export default function CatalogoPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button onClick={() => setRecetaModal({ open: true, producto: p })}
+                      className="text-xs text-brand-teal font-black">
+                      Receta
+                    </button>
                     <button onClick={() => handleToggle(p)}
                       className="text-xs text-brand-wood-soft hover:text-brand-berry font-bold">
                       {p.is_active ? 'Desactivar' : 'Activar'}
@@ -219,12 +229,22 @@ export default function CatalogoPage() {
         </>
       )}
 
-      {/* Modal */}
+      {/* Modal producto */}
       {modal.open && (
         <ProductoModal
           producto={modal.producto}
           onClose={() => setModal({ open: false })}
           onSaved={() => { setModal({ open: false }); toast.success('Producto guardado'); fetchProductos() }}
+        />
+      )}
+
+      {/* Modal receta */}
+      {recetaModal.open && recetaModal.producto && (
+        <RecetaModal
+          productoId={recetaModal.producto.id}
+          productoNombre={recetaModal.producto.name}
+          onClose={() => setRecetaModal({ open: false })}
+          onSaved={() => { setRecetaModal({ open: false }); toast.success('Receta guardada') }}
         />
       )}
     </div>
