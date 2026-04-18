@@ -44,9 +44,20 @@ export interface AlertaCxC {
   dias_max: number
 }
 
+export interface AlertaPedido {
+  id: string
+  cliente_nombre: string
+  sucursal_nombre: string | null
+  total: number
+  n_productos: number
+  created_at: string
+  minutos_atras: number
+}
+
 export interface AlertasOperativas {
   stock: AlertaStock[]
   cxc: AlertaCxC[]
+  pedidos: AlertaPedido[]
 }
 
 export interface TopProducto {
@@ -184,7 +195,13 @@ export async function getPedidosRecientes(limit = 5): Promise<PedidoReciente[]> 
 // ─── Alertas operativas (stock bajo + CxC vencida 30+ días) ──────────────────
 
 export async function getAlertasOperativas(): Promise<AlertasOperativas> {
-  const [{ data: insumosData }, { data: pedidosData }, { data: cobrosData }, { data: clientesData }] = await Promise.all([
+  const [
+    { data: insumosData },
+    { data: pedidosData },
+    { data: cobrosData },
+    { data: clientesData },
+    { data: pedidosNuevosData },
+  ] = await Promise.all([
     supabase
       .from('insumos')
       .select('id, nombre, unidad, stock_actual, stock_minimo')
@@ -199,6 +216,17 @@ export async function getAlertasOperativas(): Promise<AlertasOperativas> {
     supabase
       .from('clientes')
       .select('id, nombre_comercial'),
+    supabase
+      .from('pedidos')
+      .select(`
+        id, created_at,
+        cliente:clientes(nombre_comercial),
+        sucursal:sucursales_clientes(nombre_sucursal),
+        detalle:pedido_detalle(cantidad, precio_unit)
+      `)
+      .eq('estatus', 'borrador')
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
 
   // Stock bajo/agotado (solo con mínimo definido > 0)
@@ -264,7 +292,25 @@ export async function getAlertasOperativas(): Promise<AlertasOperativas> {
 
   cxc.sort((a, b) => b.saldo_vencido - a.saldo_vencido)
 
-  return { stock, cxc }
+  // Pedidos nuevos sin confirmar (estatus=borrador)
+  const ahora = Date.now()
+  const pedidos: AlertaPedido[] = (pedidosNuevosData ?? []).map((p: any) => {
+    const total = (p.detalle ?? []).reduce(
+      (s: number, d: any) => s + d.cantidad * d.precio_unit, 0
+    )
+    const minutos = Math.floor((ahora - new Date(p.created_at).getTime()) / 60000)
+    return {
+      id: p.id,
+      cliente_nombre: p.cliente?.nombre_comercial ?? 'Sin cliente',
+      sucursal_nombre: p.sucursal?.nombre_sucursal ?? null,
+      total,
+      n_productos: p.detalle?.length ?? 0,
+      created_at: p.created_at,
+      minutos_atras: minutos,
+    }
+  })
+
+  return { stock, cxc, pedidos }
 }
 
 // ─── Ventas por sucursal — últimos N meses ───────────────────────────────────

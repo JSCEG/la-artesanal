@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom'
 import { useSession } from '../../hooks/useSession'
+import { useToast } from '../../context/ToastContext'
 import Breadcrumb, { type BreadcrumbItem } from './Breadcrumb'
 import { getAlertasOperativas, type AlertasOperativas } from '../../services/dashboard'
 
@@ -61,24 +62,44 @@ interface AdminLayoutProps {
 export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
   const { profile, signOut } = useSession()
   const navigate = useNavigate()
+  const toast = useToast()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [alertas, setAlertas] = useState<AlertasOperativas | null>(null)
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
+  const seenPedidoIds = useRef<Set<string> | null>(null)
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
   }
 
-  // Cargar alertas al montar + cada 2 min
+  // Cargar alertas al montar + cada 45s; dispara toast si hay pedidos nuevos
   useEffect(() => {
     let cancel = false
-    const load = () => getAlertasOperativas().then(a => { if (!cancel) setAlertas(a) }).catch(() => {})
+    const load = async () => {
+      try {
+        const a = await getAlertasOperativas()
+        if (cancel) return
+
+        // Primera carga: inicializa set silenciosamente
+        if (seenPedidoIds.current === null) {
+          seenPedidoIds.current = new Set(a.pedidos.map(p => p.id))
+        } else {
+          // Cargas posteriores: ids nuevos → toast
+          const nuevos = a.pedidos.filter(p => !seenPedidoIds.current!.has(p.id))
+          for (const p of nuevos) {
+            toast.info(`Nuevo pedido de ${p.cliente_nombre} — ${p.total.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}`)
+            seenPedidoIds.current.add(p.id)
+          }
+        }
+        setAlertas(a)
+      } catch { /* noop */ }
+    }
     load()
-    const id = setInterval(load, 120_000)
+    const id = setInterval(load, 45_000)
     return () => { cancel = true; clearInterval(id) }
-  }, [])
+  }, [toast])
 
   // Click fuera cierra dropdown
   useEffect(() => {
@@ -90,7 +111,10 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
     return () => document.removeEventListener('mousedown', onClick)
   }, [notifOpen])
 
-  const totalAlertas = (alertas?.stock.length ?? 0) + (alertas?.cxc.length ?? 0)
+  const totalAlertas =
+    (alertas?.stock.length ?? 0) +
+    (alertas?.cxc.length ?? 0) +
+    (alertas?.pedidos.length ?? 0)
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white">
@@ -242,6 +266,34 @@ export default function AdminLayout({ breadcrumb = [] }: AdminLayoutProps) {
                       </div>
                       <p className="text-sm font-bold text-brand-wood">Todo en orden</p>
                       <p className="text-xs text-brand-wood-soft font-medium">Sin alertas operativas.</p>
+                    </div>
+                  )}
+
+                  {alertas && alertas.pedidos.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-brand-teal/5 border-b border-brand-teal/10 flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-widest text-brand-teal font-black">Pedidos nuevos</span>
+                        <Link to="/admin/pedidos" onClick={() => setNotifOpen(false)} className="text-[10px] font-black uppercase tracking-widest text-brand-teal hover:text-brand-berry">Ver</Link>
+                      </div>
+                      <ul>
+                        {alertas.pedidos.slice(0, 4).map(p => {
+                          const m = p.minutos_atras
+                          const rel = m < 1 ? 'ahora' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.floor(m/60)} h` : `hace ${Math.floor(m/1440)} d`
+                          return (
+                            <li key={p.id} className="px-4 py-2.5 border-b border-brand-wood/5 last:border-0 flex items-center justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-brand-wood truncate">{p.cliente_nombre}</p>
+                                <p className="text-[10px] text-brand-wood-soft font-semibold truncate">
+                                  {p.sucursal_nombre ?? 'Principal'} · {p.n_productos} prod · {rel}
+                                </p>
+                              </div>
+                              <p className="font-display text-sm font-black text-brand-teal flex-shrink-0">
+                                {p.total.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}
+                              </p>
+                            </li>
+                          )
+                        })}
+                      </ul>
                     </div>
                   )}
 
