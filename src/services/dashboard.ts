@@ -267,6 +267,65 @@ export async function getAlertasOperativas(): Promise<AlertasOperativas> {
   return { stock, cxc }
 }
 
+// ─── Ventas por sucursal — últimos N meses ───────────────────────────────────
+
+export interface VentaMes {
+  mes: string      // 'YYYY-MM'
+  label: string    // 'ene', 'feb', ...
+  ingresos: number
+  pedidos: number
+}
+
+export async function getVentasPorSucursal(meses = 6): Promise<Map<string, VentaMes[]>> {
+  const hoy = new Date()
+  const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - (meses - 1), 1)
+  const inicioStr = inicio.toISOString().split('T')[0]
+
+  const { data } = await supabase
+    .from('pedidos')
+    .select('sucursal_id, fecha_pedido, pedido_detalle(cantidad, precio_unit)')
+    .gte('fecha_pedido', inicioStr)
+    .neq('estatus', 'cancelado')
+
+  // Esqueleto de meses para cada sucursal (garantiza 0s visibles)
+  const mesesSkel: VentaMes[] = []
+  const labelsEs = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+  for (let i = 0; i < meses; i++) {
+    const d = new Date(inicio.getFullYear(), inicio.getMonth() + i, 1)
+    mesesSkel.push({
+      mes: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: labelsEs[d.getMonth()],
+      ingresos: 0,
+      pedidos: 0,
+    })
+  }
+
+  const result = new Map<string, VentaMes[]>()
+
+  for (const p of data ?? []) {
+    const sid: string | null = (p as any).sucursal_id
+    if (!sid) continue
+    const fecha: string = (p as any).fecha_pedido
+    const mesKey = fecha.slice(0, 7)
+    const total = ((p as any).pedido_detalle ?? []).reduce(
+      (s: number, d: any) => s + d.cantidad * d.precio_unit, 0
+    )
+
+    let arr = result.get(sid)
+    if (!arr) {
+      arr = mesesSkel.map(m => ({ ...m }))
+      result.set(sid, arr)
+    }
+    const bucket = arr.find(m => m.mes === mesKey)
+    if (bucket) {
+      bucket.ingresos += total
+      bucket.pedidos += 1
+    }
+  }
+
+  return result
+}
+
 // ─── Top productos (por cantidad vendida en el mes) ──────────────────────────
 
 export async function getTopProductos(limit = 5): Promise<TopProducto[]> {

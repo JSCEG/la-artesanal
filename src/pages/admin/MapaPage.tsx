@@ -3,7 +3,9 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { getSucursales } from '../../services/clientes'
 import type { Sucursal } from '../../services/clientes'
+import { getVentasPorSucursal, type VentaMes } from '../../services/dashboard'
 import EmptyState from '../../components/admin/EmptyState'
+import SucursalMiniChart from '../../components/admin/SucursalMiniChart'
 import { Skeleton } from '../../components/admin/Skeleton'
 import { useToast } from '../../context/ToastContext'
 
@@ -115,6 +117,7 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
 // ── Página principal ────────────────────────────────────────────────────────
 export default function MapaPage() {
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
+  const [ventasMap, setVentasMap] = useState<Map<string, VentaMes[]>>(new Map())
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [filtroEstatus, setFiltroEstatus] = useState<string>('todos')
@@ -123,8 +126,11 @@ export default function MapaPage() {
   const toast = useToast()
 
   useEffect(() => {
-    getSucursales()
-      .then(data => setSucursales(data))
+    Promise.all([getSucursales(), getVentasPorSucursal(6)])
+      .then(([sucs, ventas]) => {
+        setSucursales(sucs)
+        setVentasMap(ventas)
+      })
       .catch(() => toast.error('No se pudo cargar el mapa'))
       .finally(() => setLoading(false))
   }, [toast])
@@ -323,7 +329,7 @@ export default function MapaPage() {
                       position={[suc.latitud!, suc.longitud!]}
                       icon={makeIcon(suc.estatus, colorIdx, initials)}
                     >
-                      <Popup minWidth={220}>
+                      <Popup minWidth={240}>
                         <div className="text-sm space-y-1">
                           <p className="font-black text-brand-wood" style={{ fontSize: 13 }}>{suc.nombre_sucursal}</p>
                           <p className="text-brand-wood-soft" style={{ fontSize: 11, marginBottom: 4 }}>{suc.cliente?.nombre_comercial}</p>
@@ -336,6 +342,14 @@ export default function MapaPage() {
                           <span className={`inline-block text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mt-1 ${e.badgeBg} ${e.badgeText}`}>
                             {e.label}
                           </span>
+
+                          {/* Chart ventas últimos 6 meses */}
+                          {ventasMap.get(suc.id) && (
+                            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e7d8c3' }}>
+                              <SucursalMiniChart data={ventasMap.get(suc.id)!} />
+                            </div>
+                          )}
+
                           <div className="pt-1">
                             <a
                               href={`https://www.google.com/maps?q=${suc.latitud},${suc.longitud}`}
