@@ -21,9 +21,15 @@ export interface InsumoMovimiento {
   insumo_id: string
   tipo: TipoMovimiento
   cantidad: number // ya firmado (entrada +, salida/merma -)
+  costo_unitario: number | null
   motivo: string | null
   created_at: string
   created_by: string | null
+}
+
+export interface KardexRow extends InsumoMovimiento {
+  stock_running: number
+  wac_running: number // costo promedio móvil post-movimiento
 }
 
 export interface InsumoFormData {
@@ -99,6 +105,7 @@ export async function createMovimiento(data: {
   insumo_id: string
   tipo: TipoMovimiento
   cantidad_abs: number        // siempre positivo desde el form; aquí se firma
+  costo_unitario?: number | null  // solo para entrada (snapshot → WAC)
   motivo: string
   createdBy: string
 }) {
@@ -111,7 +118,40 @@ export async function createMovimiento(data: {
     insumo_id: data.insumo_id,
     tipo: data.tipo,
     cantidad: signed,
+    costo_unitario: data.tipo === 'entrada' ? (data.costo_unitario ?? null) : null,
     motivo: data.motivo.trim() || null,
     created_by: data.createdBy,
   }).select().single()
+}
+
+// ─── Kardex con costo promedio móvil ──────────────────────────────────────────
+
+export async function getKardex(insumoId: string, limit = 200): Promise<KardexRow[]> {
+  const { data, error } = await supabase
+    .from('insumo_movimientos')
+    .select('*')
+    .eq('insumo_id', insumoId)
+    .order('created_at', { ascending: true })
+    .limit(limit)
+  if (error) throw error
+  const movs = (data ?? []) as InsumoMovimiento[]
+
+  let stock = 0
+  let wac = 0
+  const rows: KardexRow[] = []
+  for (const m of movs) {
+    const prevStock = stock
+    const prevWac = wac
+    stock = prevStock + m.cantidad
+    if (m.tipo === 'entrada' && m.costo_unitario != null && m.cantidad > 0) {
+      if (prevStock <= 0) {
+        wac = m.costo_unitario
+      } else if (stock > 0) {
+        wac = ((prevStock * prevWac) + (m.cantidad * m.costo_unitario)) / stock
+      }
+    }
+    // salida/merma/ajuste no mueven WAC
+    rows.push({ ...m, stock_running: stock, wac_running: wac })
+  }
+  return rows.reverse() // más reciente primero para UI
 }

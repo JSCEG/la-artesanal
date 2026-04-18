@@ -40,6 +40,7 @@ function fmtFecha(iso: string) {
 export default function MovimientoInsumoModal({ insumo, onClose, onSaved }: Props) {
   const [tipo, setTipo] = useState<TipoMovimiento>('entrada')
   const [cantidad, setCantidad] = useState<number>(0)
+  const [costoUnit, setCostoUnit] = useState<number>(insumo.costo_unitario || 0)
   const [signoAjuste, setSignoAjuste] = useState<'+' | '-'>('+')
   const [motivo, setMotivo] = useState('')
   const [loading, setLoading] = useState(false)
@@ -63,6 +64,7 @@ export default function MovimientoInsumoModal({ insumo, onClose, onSaved }: Prop
         insumo_id: insumo.id,
         tipo,
         cantidad_abs: cantAbs,
+        costo_unitario: tipo === 'entrada' ? costoUnit : null,
         motivo,
         createdBy: uid,
       })
@@ -142,6 +144,21 @@ export default function MovimientoInsumoModal({ insumo, onClose, onSaved }: Prop
                   className="input flex-1 font-display text-xl font-black" placeholder="0" required />
               </div>
             </div>
+
+            {/* Costo unitario (solo entrada) */}
+            {tipo === 'entrada' && (
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">
+                  Costo unitario (MXN)
+                </label>
+                <input type="number" min="0" step="0.01" value={costoUnit || ''}
+                  onChange={e => setCostoUnit(Number(e.target.value))}
+                  className="input w-full font-mono" placeholder="0.00" />
+                <p className="text-[10px] text-brand-wood-soft font-medium mt-1">
+                  Costo de esta compra. Recalcula costo promedio móvil (WAC).
+                </p>
+              </div>
+            )}
 
             {/* Preview nuevo stock */}
             {cantidad > 0 && (

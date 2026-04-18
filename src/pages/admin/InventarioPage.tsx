@@ -3,6 +3,7 @@ import { getInsumos, deleteInsumo } from '../../services/insumos'
 import type { Insumo } from '../../services/insumos'
 import InsumoModal from '../../components/admin/InsumoModal'
 import MovimientoInsumoModal from '../../components/admin/MovimientoInsumoModal'
+import KardexModal from '../../components/admin/KardexModal'
 import { CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
 import { useToast } from '../../context/ToastContext'
@@ -35,6 +36,7 @@ export default function InventarioPage() {
   const [filtro, setFiltro] = useState<'todos' | 'bajo' | 'agotado'>('todos')
   const [insumoModal, setInsumoModal] = useState<{ open: boolean; insumo?: Insumo | null }>({ open: false })
   const [movModal, setMovModal] = useState<{ open: boolean; insumo?: Insumo }>({ open: false })
+  const [kardexModal, setKardexModal] = useState<{ open: boolean; insumo?: Insumo }>({ open: false })
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
@@ -209,6 +211,10 @@ export default function InventarioPage() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => setKardexModal({ open: true, insumo: i })}
+                    className="text-xs text-brand-wood-soft font-black uppercase tracking-wide hover:text-brand-teal">
+                    Kardex
+                  </button>
                   <button onClick={() => setMovModal({ open: true, insumo: i })}
                     className="text-xs text-brand-teal font-black uppercase tracking-wide hover:opacity-70">
                     Movimiento
@@ -252,6 +258,12 @@ export default function InventarioPage() {
           insumo={movModal.insumo}
           onClose={() => setMovModal({ open: false })}
           onSaved={() => { setMovModal({ open: false }); toast.success('Movimiento registrado'); fetchInsumos() }}
+        />
+      )}
+      {kardexModal.open && kardexModal.insumo && (
+        <KardexModal
+          insumo={kardexModal.insumo}
+          onClose={() => setKardexModal({ open: false })}
         />
       )}
     </div>
