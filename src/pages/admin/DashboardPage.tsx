@@ -7,9 +7,11 @@ import {
   getDashboardMetrics,
   getPedidosRecientes,
   getTopProductos,
+  getAlertasOperativas,
   type DashboardMetrics,
   type PedidoReciente,
   type TopProducto,
+  type AlertasOperativas,
 } from '../../services/dashboard'
 import type { EstatusPedido } from '../../services/pedidos'
 
@@ -91,20 +93,23 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [recientes, setRecientes] = useState<PedidoReciente[]>([])
   const [topProductos, setTopProductos] = useState<TopProducto[]>([])
+  const [alertas, setAlertas] = useState<AlertasOperativas | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancel = false
     async function load() {
-      const [m, r, t] = await Promise.all([
+      const [m, r, t, a] = await Promise.all([
         getDashboardMetrics(),
         getPedidosRecientes(5),
         getTopProductos(5),
+        getAlertasOperativas(),
       ])
       if (!cancel) {
         setMetrics(m)
         setRecientes(r)
         setTopProductos(t)
+        setAlertas(a)
         setLoading(false)
       }
     }
@@ -202,6 +207,92 @@ export default function DashboardPage() {
           )
         }
       </div>
+
+      {/* Alertas operativas */}
+      {!loading && alertas && (alertas.stock.length > 0 || alertas.cxc.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          {/* Stock bajo / agotado */}
+          {alertas.stock.length > 0 && (
+            <div className="bg-white rounded-3xl border border-brand-coral/30 shadow-[0_4px_24px_rgba(235,121,111,0.08)] p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-coral/10 text-brand-coral flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg font-black text-brand-wood leading-tight">Stock crítico</h3>
+                    <p className="text-xs text-brand-wood-soft font-semibold">{alertas.stock.length} insumo{alertas.stock.length === 1 ? '' : 's'}</p>
+                  </div>
+                </div>
+                <Link to="/admin/inventario" className="text-xs font-black uppercase tracking-widest text-brand-coral hover:text-brand-berry transition-colors">
+                  Ver
+                </Link>
+              </div>
+              <ul className="space-y-2">
+                {alertas.stock.slice(0, 5).map(i => (
+                  <li key={i.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-brand-wood/5 last:border-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border-2 flex-shrink-0 ${
+                        i.estado === 'agotado'
+                          ? 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'
+                          : 'bg-brand-coral/10 text-brand-coral border-brand-coral/30'
+                      }`}>
+                        {i.estado === 'agotado' ? 'AGOTADO' : 'BAJO'}
+                      </span>
+                      <p className="text-sm font-bold text-brand-wood truncate">{i.nombre}</p>
+                    </div>
+                    <p className="text-xs font-mono text-brand-wood-soft font-bold flex-shrink-0">
+                      {i.stock_actual} / {i.stock_minimo} {i.unidad}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {alertas.stock.length > 5 && (
+                <p className="text-[11px] text-brand-wood-soft font-semibold text-center mt-3">
+                  +{alertas.stock.length - 5} más en inventario
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* CxC vencida 30+ */}
+          {alertas.cxc.length > 0 && (
+            <div className="bg-white rounded-3xl border border-brand-berry/30 shadow-[0_4px_24px_rgba(177,48,107,0.08)] p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-berry/10 text-brand-berry flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg font-black text-brand-wood leading-tight">Cobranza vencida</h3>
+                    <p className="text-xs text-brand-wood-soft font-semibold">{alertas.cxc.length} cliente{alertas.cxc.length === 1 ? '' : 's'} · +30 días</p>
+                  </div>
+                </div>
+                <Link to="/admin/cobros" className="text-xs font-black uppercase tracking-widest text-brand-berry hover:text-brand-berry-soft transition-colors">
+                  Ver
+                </Link>
+              </div>
+              <ul className="space-y-2">
+                {alertas.cxc.slice(0, 5).map(c => (
+                  <li key={c.cliente_id} className="flex items-center justify-between gap-3 py-1.5 border-b border-brand-wood/5 last:border-0">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-brand-wood truncate">{c.nombre_comercial}</p>
+                      <p className="text-[11px] text-brand-wood-soft font-semibold">{c.dias_max} días máx.</p>
+                    </div>
+                    <p className="font-display text-sm font-black text-brand-berry flex-shrink-0">{fmtMXN(c.saldo_vencido)}</p>
+                  </li>
+                ))}
+              </ul>
+              {alertas.cxc.length > 5 && (
+                <p className="text-[11px] text-brand-wood-soft font-semibold text-center mt-3">
+                  +{alertas.cxc.length - 5} más en cobros
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Grid: Actividad reciente + Top productos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
