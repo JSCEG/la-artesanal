@@ -44,6 +44,15 @@ export async function getRecetaByProducto(productoId: number): Promise<Receta | 
   return (data as any) ?? null
 }
 
+export async function getProductoIdsConReceta(): Promise<Set<number>> {
+  const { data, error } = await supabase
+    .from('recetas')
+    .select('producto_id')
+    .eq('activo', true)
+  if (error) throw error
+  return new Set((data ?? []).map(r => r.producto_id as number))
+}
+
 export async function getRecetasCount(): Promise<number> {
   const { count } = await supabase
     .from('recetas')

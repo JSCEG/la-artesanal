@@ -151,7 +151,8 @@ export async function createPedido(form: PedidoFormData, createdBy: string) {
 }
 
 export async function updatePedidoEstatus(id: string, estatus: EstatusPedido) {
-  return supabase.from('pedidos').update({ estatus }).eq('id', id)
+  const { error } = await supabase.from('pedidos').update({ estatus }).eq('id', id)
+  if (error) throw error
 }
 
 export async function deletePedido(id: string) {

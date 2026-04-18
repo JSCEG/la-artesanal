@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getProductosAdmin, toggleProductoActivo, CATEGORIAS_PRODUCTO } from '../../services/productos'
 import type { ProductoConPrecios } from '../../services/productos'
+import { getProductoIdsConReceta } from '../../services/recetas'
 import ProductoModal from '../../components/admin/ProductoModal'
 import RecetaModal from '../../components/admin/RecetaModal'
 import { formatCurrency } from '../../utils/format'
@@ -10,6 +11,7 @@ import { useToast } from '../../context/ToastContext'
 
 export default function CatalogoPage() {
   const [productos, setProductos] = useState<ProductoConPrecios[]>([])
+  const [recetaIds, setRecetaIds] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [categoria, setCategoria] = useState('Todos')
@@ -22,7 +24,9 @@ export default function CatalogoPage() {
   async function fetchProductos() {
     setLoading(true)
     try {
-      setProductos(await getProductosAdmin())
+      const [prods, ids] = await Promise.all([getProductosAdmin(), getProductoIdsConReceta()])
+      setProductos(prods)
+      setRecetaIds(ids)
     } catch {
       toast.error('No se pudo cargar el catálogo')
     } finally {
@@ -143,7 +147,12 @@ export default function CatalogoPage() {
                   <tr key={p.id} className="hover:bg-brand-cream/30 transition-colors">
                     <td className="px-4 py-3">
                       <div>
-                        <p className="font-bold text-brand-wood">{p.name}</p>
+                        <p className="font-bold text-brand-wood flex items-center gap-2">
+                          {p.name}
+                          {recetaIds.has(p.id) && (
+                            <span title="Con receta" className="inline-block w-1.5 h-1.5 rounded-full bg-brand-teal" />
+                          )}
+                        </p>
                         <p className="text-xs text-brand-wood-soft mt-0.5">{p.category} · {p.unit}</p>
                       </div>
                     </td>
@@ -166,8 +175,10 @@ export default function CatalogoPage() {
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <button onClick={() => setRecetaModal({ open: true, producto: p })}
-                        className="text-xs text-brand-teal font-black uppercase tracking-wide hover:opacity-70 mr-3">
-                        Receta
+                        className={`text-xs font-black uppercase tracking-wide hover:opacity-70 mr-3 ${
+                          recetaIds.has(p.id) ? 'text-brand-teal' : 'text-brand-wood-soft'
+                        }`}>
+                        {recetaIds.has(p.id) ? '● Receta' : 'Receta'}
                       </button>
                       <button onClick={() => setModal({ open: true, producto: p })}
                         className="text-xs text-brand-berry font-black uppercase tracking-wide hover:opacity-70">
@@ -210,8 +221,8 @@ export default function CatalogoPage() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => setRecetaModal({ open: true, producto: p })}
-                      className="text-xs text-brand-teal font-black">
-                      Receta
+                      className={`text-xs font-black ${recetaIds.has(p.id) ? 'text-brand-teal' : 'text-brand-wood-soft'}`}>
+                      {recetaIds.has(p.id) ? '● Receta' : 'Receta'}
                     </button>
                     <button onClick={() => handleToggle(p)}
                       className="text-xs text-brand-wood-soft hover:text-brand-berry font-bold">
@@ -244,7 +255,7 @@ export default function CatalogoPage() {
           productoId={recetaModal.producto.id}
           productoNombre={recetaModal.producto.name}
           onClose={() => setRecetaModal({ open: false })}
-          onSaved={() => { setRecetaModal({ open: false }); toast.success('Receta guardada') }}
+          onSaved={() => { setRecetaModal({ open: false }); toast.success('Receta guardada'); fetchProductos() }}
         />
       )}
     </div>

@@ -65,8 +65,9 @@ export default function PedidosPage() {
       await updatePedidoEstatus(pedido.id, cfg.next)
       toast.success(`Pedido movido a ${cfg.nextLabel}`)
       await fetchPedidos()
-    } catch {
-      toast.error('No se pudo actualizar el estatus')
+    } catch (e: any) {
+      console.error('[avanzar estatus]', e)
+      toast.error(e?.message ?? 'No se pudo actualizar el estatus')
     } finally {
       setUpdatingId(null)
     }
