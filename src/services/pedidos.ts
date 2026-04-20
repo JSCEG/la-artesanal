@@ -166,6 +166,42 @@ export function calcularTotal(detalle: { cantidad: number; precio_unit: number }
   return detalle.reduce((sum, d) => sum + d.cantidad * d.precio_unit, 0)
 }
 
+// ─── Historial / Timeline ─────────────────────────────────────────────────────
+
+export interface PedidoHistorialEntry {
+  id: string
+  pedido_id: string
+  estatus_from: EstatusPedido | null
+  estatus_to: EstatusPedido
+  changed_by: string | null
+  notas: string | null
+  created_at: string
+  changed_by_name?: string | null
+}
+
+export async function getHistorialPedido(pedidoId: string): Promise<PedidoHistorialEntry[]> {
+  const { data, error } = await supabase
+    .from('pedido_historial')
+    .select('*')
+    .eq('pedido_id', pedidoId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  const rows = (data ?? []) as PedidoHistorialEntry[]
+
+  // Resolver nombres de usuarios (profiles)
+  const uids = Array.from(new Set(rows.map(r => r.changed_by).filter(Boolean))) as string[]
+  if (uids.length > 0) {
+    const { data: profs } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', uids)
+    const map = new Map<string, string>()
+    for (const p of profs ?? []) map.set(p.id, p.full_name ?? '')
+    for (const r of rows) if (r.changed_by) r.changed_by_name = map.get(r.changed_by) ?? null
+  }
+  return rows
+}
+
 // ─── Cobros ──────────────────────────────────────────────────────────────────
 
 export async function getCobros(clienteId?: string): Promise<Cobro[]> {

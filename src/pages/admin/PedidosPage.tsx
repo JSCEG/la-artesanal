@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { getPedidos, updatePedidoEstatus, deletePedido, calcularTotal } from '../../services/pedidos'
 import type { Pedido, EstatusPedido } from '../../services/pedidos'
 import PedidoModal from '../../components/admin/PedidoModal'
+import PedidoTimeline from '../../components/admin/PedidoTimeline'
 import { CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
 import { useToast } from '../../context/ToastContext'
@@ -342,6 +343,9 @@ export default function PedidosPage() {
                         <span className="font-display text-lg font-black text-brand-berry">{fmt(total)}</span>
                       </div>
                     )}
+
+                    {/* Timeline */}
+                    <PedidoTimeline pedidoId={pedido.id} />
 
                     {/* Notas */}
                     {pedido.notas && (
