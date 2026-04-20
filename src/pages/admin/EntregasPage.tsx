@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { getEntregas, getPedidosPendientesEntrega, calcularTotal } from '../../services/pedidos'
 import type { Entrega, Pedido, EstatusEntrega } from '../../services/pedidos'
 import EntregaModal from '../../components/admin/EntregaModal'
+import { toCSV, downloadCSV, fechaStamp } from '../../utils/csv'
 import { CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
 import { useToast } from '../../context/ToastContext'
@@ -80,13 +81,39 @@ export default function EntregasPage() {
           <h1 className="font-display text-2xl md:text-3xl font-black text-brand-wood">Entregas</h1>
           <p className="text-sm text-brand-wood-soft font-medium mt-1">{entregas.length} entregas registradas</p>
         </div>
-        <button
-          onClick={() => abrirModal()}
-          className="btn-primary text-sm flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          Nueva entrega
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              const rows = filtradas.map(e => {
+                const total = calcularTotal(e.detalle ?? [])
+                const nItems = (e.detalle ?? []).reduce((s, d) => s + d.cantidad, 0)
+                return [
+                  e.id.slice(0, 8), e.estatus, e.fecha_entrega,
+                  e.pedido?.cliente?.nombre_comercial ?? '',
+                  e.pedido?.sucursal?.nombre_sucursal ?? '',
+                  e.entregado_por ?? '', nItems, total,
+                  (e.notas ?? '').replace(/\n/g, ' '),
+                ]
+              })
+              const csv = toCSV(
+                ['ID', 'Estatus', 'Fecha', 'Cliente', 'Sucursal', 'Entregado por', 'Unidades', 'Total', 'Notas'],
+                rows,
+              )
+              downloadCSV(`entregas-${fechaStamp()}.csv`, csv)
+            }}
+            className="text-xs font-black uppercase tracking-widest text-brand-wood-soft hover:text-brand-teal px-3 py-2 rounded-xl border-2 border-brand-wood/15 hover:border-brand-teal/40 flex items-center gap-1.5 bg-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            CSV
+          </button>
+          <button
+            onClick={() => abrirModal()}
+            className="btn-primary text-sm flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Nueva entrega
+          </button>
+        </div>
       </div>
 
       {/* Pedidos pendientes de entregar */}

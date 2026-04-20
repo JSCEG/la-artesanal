@@ -4,6 +4,7 @@ import type { Cliente, Sucursal } from '../../services/clientes'
 import { getSaldoCliente } from '../../services/pedidos'
 import ClienteModal from '../../components/admin/ClienteModal'
 import SucursalModal from '../../components/admin/SucursalModal'
+import { toCSV, downloadCSV, fechaStamp } from '../../utils/csv'
 import { CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
 import { useToast } from '../../context/ToastContext'
@@ -104,11 +105,35 @@ export default function ClientesPage() {
           <h1 className="font-display text-2xl md:text-3xl font-black text-brand-wood">Clientes</h1>
           <p className="text-sm text-brand-wood-soft font-medium mt-1">{clientes.length} clientes registrados</p>
         </div>
-        <button onClick={() => setClienteModal({ open: true, cliente: null })}
-          className="btn-primary text-sm flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          Nuevo cliente
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              const rows = filtrados.map(c => {
+                const s = saldos[c.id]
+                return [
+                  c.id.slice(0, 8), c.nombre_comercial, c.tipo,
+                  c.contacto_principal ?? '', c.telefono ?? '', (c as any).email ?? '',
+                  c.maneja_credito ? 'Sí' : 'No', c.limite_credito ?? 0,
+                  s?.total_pedidos ?? 0, s?.total_cobrado ?? 0, s?.saldo ?? 0,
+                ]
+              })
+              const csv = toCSV(
+                ['ID', 'Nombre', 'Tipo', 'Contacto', 'Teléfono', 'Email', 'Crédito', 'Límite', 'Total pedidos', 'Total cobrado', 'Saldo'],
+                rows,
+              )
+              downloadCSV(`clientes-saldos-${fechaStamp()}.csv`, csv)
+            }}
+            className="text-xs font-black uppercase tracking-widest text-brand-wood-soft hover:text-brand-teal px-3 py-2 rounded-xl border-2 border-brand-wood/15 hover:border-brand-teal/40 flex items-center gap-1.5 bg-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            CSV
+          </button>
+          <button onClick={() => setClienteModal({ open: true, cliente: null })}
+            className="btn-primary text-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Nuevo cliente
+          </button>
+        </div>
       </div>
 
       {/* Búsqueda */}

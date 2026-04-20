@@ -5,6 +5,7 @@ import type { Cobro, MetodoCobro } from '../../services/pedidos'
 import type { Cliente } from '../../services/clientes'
 import { supabase } from '../../services/supabase'
 import CobroModal from '../../components/admin/CobroModal'
+import { toCSV, downloadCSV, fechaStamp } from '../../utils/csv'
 import { CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
 import { useToast } from '../../context/ToastContext'
@@ -265,13 +266,35 @@ export default function CobrosPage() {
             {cobros.length} {cobros.length === 1 ? 'cobro registrado' : 'cobros registrados'}
           </p>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="btn-primary text-sm flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          Registrar cobro
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              const rows = filtrados.map(c => [
+                c.id.slice(0, 8), c.fecha_cobro,
+                c.cliente?.nombre_comercial ?? '',
+                c.metodo, c.monto, c.referencia ?? '',
+                c.pedido?.fecha_pedido ?? '',
+                (c.notas ?? '').replace(/\n/g, ' '),
+              ])
+              const csv = toCSV(
+                ['ID', 'Fecha', 'Cliente', 'Método', 'Monto', 'Referencia', 'Fecha pedido', 'Notas'],
+                rows,
+              )
+              downloadCSV(`cobros-${fechaStamp()}.csv`, csv)
+            }}
+            className="text-xs font-black uppercase tracking-widest text-brand-wood-soft hover:text-brand-teal px-3 py-2 rounded-xl border-2 border-brand-wood/15 hover:border-brand-teal/40 flex items-center gap-1.5 bg-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            CSV
+          </button>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="btn-primary text-sm flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Registrar cobro
+          </button>
+        </div>
       </div>
 
       {/* Métricas */}
