@@ -107,3 +107,14 @@ export async function deleteCliente(id: string) {
   await supabase.from('sucursales_clientes').delete().eq('cliente_id', id)
   return supabase.from('clientes').delete().eq('id', id)
 }
+
+// ─── Portal mayorista ────────────────────────────────────────────────────────
+
+export async function getMiCliente(email: string): Promise<Cliente | null> {
+  const { data } = await supabase
+    .from('clientes')
+    .select('*, sucursales:sucursales_clientes(*)')
+    .eq('correo', email)
+    .maybeSingle()
+  return data as Cliente | null
+}
