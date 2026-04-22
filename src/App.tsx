@@ -13,6 +13,7 @@ import PedidosPage from './pages/admin/PedidosPage'
 import EntregasPage from './pages/admin/EntregasPage'
 import CobrosPage from './pages/admin/CobrosPage'
 import InventarioPage from './pages/admin/InventarioPage'
+import PromocionesPage from './pages/admin/PromocionesPage'
 
 function LoadingScreen() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="mapa"      element={<MapaPage />} />
           <Route path="cobros"     element={<CobrosPage />} />
           <Route path="inventario" element={<InventarioPage />} />
+          <Route path="promociones" element={<PromocionesPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

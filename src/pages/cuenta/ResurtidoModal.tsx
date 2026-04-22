@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { getCatalogoPorLista } from '../../services/productos'
 import type { ProductoCatalogo } from '../../services/productos'
 import { createPedido } from '../../services/pedidos'
+import { validarPromocion } from '../../services/promociones'
+import type { ValidacionPromo } from '../../services/promociones'
 import { useToast } from '../../context/ToastContext'
 import type { Cliente, Sucursal } from '../../services/clientes'
 
@@ -28,6 +30,9 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
   const [notas, setNotas] = useState('')
   const [cantidades, setCantidades] = useState<Record<number, number>>({})
   const [busqueda, setBusqueda] = useState('')
+  const [codigoPromo, setCodigoPromo] = useState('')
+  const [promo, setPromo] = useState<ValidacionPromo | null>(null)
+  const [validando, setValidando] = useState(false)
 
   const sucursales: Sucursal[] = (cliente.sucursales ?? []).filter(s => s.estatus === 'activo')
 
@@ -59,7 +64,30 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
       .map(p => ({ ...p, cantidad: cantidades[p.id] })),
   [productos, cantidades])
 
-  const total = seleccion.reduce((s, p) => s + p.cantidad * p.precio, 0)
+  const subtotal = seleccion.reduce((s, p) => s + p.cantidad * p.precio, 0)
+  const descuento = (() => {
+    if (!promo || promo.error) return 0
+    if (promo.tipo === 'porcentaje') return Math.round(subtotal * (promo.valor ?? 0)) / 100 // valor% of subtotal
+    return Math.min(promo.valor ?? 0, subtotal)
+  })()
+  const total = Math.max(0, subtotal - descuento)
+
+  async function aplicarPromo() {
+    if (!codigoPromo.trim()) return
+    if (subtotal <= 0) { toast.error('Agrega productos antes'); return }
+    setValidando(true)
+    const res = await validarPromocion(codigoPromo, cliente.tipo, subtotal)
+    setValidando(false)
+    if (!res) { toast.error('Error validando'); return }
+    if (res.error) { toast.error(res.error); setPromo(null); return }
+    setPromo(res)
+    toast.success(`Descuento aplicado: -${fmt(res.descuento)}`)
+  }
+
+  function quitarPromo() {
+    setPromo(null)
+    setCodigoPromo('')
+  }
 
   function setQty(id: number, n: number) {
     setCantidades(prev => {
@@ -81,6 +109,8 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
       fecha_pedido: today,
       fecha_entrega_programada: fechaEntrega || null,
       notas: notas.trim(),
+      promo_id: promo && !promo.error ? promo.id : null,
+      descuento_monto: descuento,
       detalle: seleccion.map(p => ({ producto_id: p.id, cantidad: p.cantidad, precio_unit: p.precio })),
     }, userId)
     setSaving(false)
@@ -160,11 +190,40 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
           })}
         </div>
 
-        <div className="p-4 border-t border-brand-wood/10 bg-brand-cream/30">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-brand-wood">
-              {seleccion.length} {seleccion.length === 1 ? 'producto' : 'productos'}
-            </p>
+        <div className="p-4 border-t border-brand-wood/10 bg-brand-cream/30 space-y-3">
+          {/* Promo */}
+          {promo && !promo.error ? (
+            <div className="flex items-center justify-between bg-brand-teal/10 border border-brand-teal/30 rounded-xl px-3 py-2">
+              <div>
+                <p className="text-xs font-black text-brand-teal">{promo.codigo}</p>
+                <p className="text-[10px] text-brand-wood-soft">Descuento: -{fmt(descuento)}</p>
+              </div>
+              <button onClick={quitarPromo} className="text-brand-berry text-xs font-black">Quitar</button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={codigoPromo}
+                onChange={e => setCodigoPromo(e.target.value.toUpperCase())}
+                placeholder="Código promo (opcional)"
+                className="input flex-1 text-sm"
+              />
+              <button onClick={aplicarPromo} disabled={validando || !codigoPromo.trim()} className="btn-secondary text-xs px-3">
+                {validando ? '…' : 'Aplicar'}
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-brand-wood">
+                {seleccion.length} {seleccion.length === 1 ? 'producto' : 'productos'}
+              </p>
+              {descuento > 0 && (
+                <p className="text-xs text-brand-wood-soft">Subtotal {fmt(subtotal)} · <span className="text-brand-teal font-black">-{fmt(descuento)}</span></p>
+              )}
+            </div>
             <p className="font-display text-xl font-black text-brand-wood">{fmt(total)}</p>
           </div>
           <div className="flex gap-2">

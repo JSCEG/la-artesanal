@@ -27,6 +27,8 @@ export interface Pedido {
   created_by: string | null
   created_at: string
   updated_at: string
+  promo_id?: string | null
+  descuento_monto?: number
   // joined
   cliente?: { nombre_comercial: string; tipo: string }
   sucursal?: { nombre_sucursal: string } | null
@@ -39,6 +41,8 @@ export interface PedidoFormData {
   fecha_pedido: string
   fecha_entrega_programada: string | null
   notas: string
+  promo_id?: string | null
+  descuento_monto?: number
   detalle: { producto_id: number; cantidad: number; precio_unit: number }[]
 }
 
@@ -134,6 +138,8 @@ export async function createPedido(form: PedidoFormData, createdBy: string) {
       fecha_pedido: form.fecha_pedido,
       fecha_entrega_programada: form.fecha_entrega_programada || null,
       notas: form.notas || null,
+      promo_id: form.promo_id ?? null,
+      descuento_monto: form.descuento_monto ?? 0,
       created_by: createdBy,
     })
     .select()
@@ -147,6 +153,10 @@ export async function createPedido(form: PedidoFormData, createdBy: string) {
       .from('pedido_detalle')
       .insert(form.detalle.map(d => ({ ...d, pedido_id: pedido.id })))
     if (detError) return { error: detError }
+  }
+
+  if (form.promo_id) {
+    await supabase.rpc('incrementar_uso_promo', { p_id: form.promo_id }).then(() => {}, () => {})
   }
 
   return { data: pedido, error: null }

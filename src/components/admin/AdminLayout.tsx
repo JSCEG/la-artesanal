@@ -52,6 +52,7 @@ const NAV_ITEMS = [
   { to: '/admin/entregas',   label: 'Entregas',   icon: Icon.truck,     accent: 'from-brand-teal to-brand-wood-soft' },
   { to: '/admin/cobros',     label: 'Cobros',     icon: Icon.money,     accent: 'from-brand-wood-soft to-brand-coral' },
   { to: '/admin/inventario', label: 'Inventario', icon: Icon.box,       accent: 'from-brand-wood to-brand-wood-soft' },
+  { to: '/admin/promociones', label: 'Promos',     icon: Icon.list,      accent: 'from-brand-coral to-brand-teal' },
   { to: '/admin/mapa',       label: 'Mapa',       icon: Icon.map,       accent: 'from-brand-teal to-brand-berry' },
 ]
 

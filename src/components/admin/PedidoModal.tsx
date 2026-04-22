@@ -3,6 +3,8 @@ import { getClientes } from '../../services/clientes'
 import type { Cliente, Sucursal } from '../../services/clientes'
 import { createPedido, calcularTotal } from '../../services/pedidos'
 import type { PedidoFormData } from '../../services/pedidos'
+import { validarPromocion } from '../../services/promociones'
+import type { ValidacionPromo } from '../../services/promociones'
 import { useSession } from '../../hooks/useSession'
 import { supabase } from '../../services/supabase'
 
@@ -44,6 +46,9 @@ export default function PedidoModal({ onClose, onSaved }: Props) {
 
   // Formulario
   const [clienteId, setClienteId] = useState('')
+  const [codigoPromo, setCodigoPromo] = useState('')
+  const [promo, setPromo] = useState<ValidacionPromo | null>(null)
+  const [validandoPromo, setValidandoPromo] = useState(false)
   const [sucursalId, setSucursalId] = useState('')
   const [fechaPedido, setFechaPedido] = useState(new Date().toISOString().split('T')[0])
   const [fechaEntrega, setFechaEntrega] = useState('')
@@ -149,9 +154,28 @@ export default function PedidoModal({ onClose, onSaved }: Props) {
     setLineas(prev => prev.filter(l => l.producto_id !== id))
   }
 
-  const total = calcularTotal(lineas)
+  const subtotal = calcularTotal(lineas)
   const nLineas = lineas.length
   const nUnidades = lineas.reduce((sum, l) => sum + l.cantidad, 0)
+
+  const descuento = (() => {
+    if (!promo || promo.error) return 0
+    if (promo.tipo === 'porcentaje') return Math.round(subtotal * (promo.valor ?? 0)) / 100
+    return Math.min(promo.valor ?? 0, subtotal)
+  })()
+  const total = Math.max(0, subtotal - descuento)
+
+  async function aplicarPromo() {
+    if (!codigoPromo.trim()) return
+    if (subtotal <= 0) { setError('Agrega productos antes'); return }
+    setValidandoPromo(true)
+    const res = await validarPromocion(codigoPromo, clienteSeleccionado?.tipo ?? '', subtotal)
+    setValidandoPromo(false)
+    if (!res) { setError('Error validando código'); return }
+    if (res.error) { setError(res.error); setPromo(null); return }
+    setError('')
+    setPromo(res)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -168,6 +192,8 @@ export default function PedidoModal({ onClose, onSaved }: Props) {
       fecha_pedido: fechaPedido,
       fecha_entrega_programada: fechaEntrega || null,
       notas,
+      promo_id: promo && !promo.error ? promo.id : null,
+      descuento_monto: descuento,
       detalle: lineas.map(l => ({
         producto_id: l.producto_id,
         cantidad: l.cantidad,
@@ -436,11 +462,36 @@ export default function PedidoModal({ onClose, onSaved }: Props) {
                       </div>
                     ))}
 
+                    {/* Promo */}
+                    {promo && !promo.error ? (
+                      <div className="flex items-center justify-between bg-brand-teal/10 border-2 border-brand-teal/30 rounded-xl px-3 py-2 mt-3">
+                        <div>
+                          <p className="text-xs font-black text-brand-teal">{promo.codigo}</p>
+                          <p className="text-[10px] text-brand-wood-soft">Descuento: -{fmt(descuento)}</p>
+                        </div>
+                        <button type="button" onClick={() => { setPromo(null); setCodigoPromo('') }} className="text-brand-berry text-xs font-black">Quitar</button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 mt-3">
+                        <input
+                          type="text"
+                          value={codigoPromo}
+                          onChange={e => setCodigoPromo(e.target.value.toUpperCase())}
+                          placeholder="Código promo (opcional)"
+                          className="input flex-1 text-sm"
+                        />
+                        <button type="button" onClick={aplicarPromo} disabled={validandoPromo || !codigoPromo.trim()} className="btn-secondary text-xs px-3">
+                          {validandoPromo ? '…' : 'Aplicar'}
+                        </button>
+                      </div>
+                    )}
+
                     {/* Resumen */}
                     <div className="flex items-center justify-between bg-gradient-to-br from-brand-berry/5 to-brand-berry/10 border-2 border-brand-berry/20 rounded-xl px-4 py-3 mt-3">
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-brand-berry/70">Resumen</p>
                         <p className="text-xs font-bold text-brand-wood">{nLineas} {nLineas === 1 ? 'producto' : 'productos'} · {nUnidades} {nUnidades === 1 ? 'unidad' : 'unidades'}</p>
+                        {descuento > 0 && <p className="text-[10px] text-brand-teal font-black">Subtotal {fmt(subtotal)} − {fmt(descuento)}</p>}
                       </div>
                       <p className="font-display text-2xl font-black bg-gradient-to-r from-brand-berry to-brand-berry-soft bg-clip-text text-transparent">
                         {fmt(total)}
