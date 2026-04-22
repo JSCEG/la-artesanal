@@ -147,3 +147,41 @@ export async function upsertProducto(
 export async function toggleProductoActivo(id: number, is_active: boolean) {
   return supabase.from('products').update({ is_active }).eq('id', id)
 }
+
+export interface ProductoCatalogo {
+  id: number
+  name: string
+  category: string
+  unit: string
+  photo_url: string | null
+  precio: number
+}
+
+export async function getCatalogoPorLista(listCode: 'minorista' | 'mayorista'): Promise<ProductoCatalogo[]> {
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, name, category, unit, photo_url')
+    .eq('is_active', true)
+    .order('category')
+    .order('name')
+  if (!products) return []
+
+  const { data: list } = await supabase
+    .from('price_lists')
+    .select('id')
+    .eq('code', listCode)
+    .eq('is_active', true)
+    .maybeSingle()
+  if (!list) return []
+
+  const { data: prices } = await supabase
+    .from('product_prices')
+    .select('product_id, amount')
+    .eq('price_list_id', list.id)
+    .eq('active', true)
+
+  const priceMap = new Map((prices ?? []).map(p => [p.product_id, Number(p.amount)]))
+  return products
+    .filter(p => priceMap.has(p.id))
+    .map(p => ({ ...p, precio: priceMap.get(p.id) ?? 0 }))
+}

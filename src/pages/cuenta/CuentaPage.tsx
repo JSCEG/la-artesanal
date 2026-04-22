@@ -10,6 +10,7 @@ import { supabase } from '../../services/supabase'
 import { CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
 import { useToast } from '../../context/ToastContext'
+import ResurtidoModal from './ResurtidoModal'
 
 // ─── Config visual ────────────────────────────────────────────────────────────
 
@@ -64,6 +65,7 @@ export default function CuentaPage() {
   const [filtroEstatus, setFiltroEstatus] = useState<EstatusPedido | 'todos'>('todos')
   const [busqueda, setBusqueda] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [resurtidoOpen, setResurtidoOpen] = useState(false)
 
   const isMayorista = profile?.commercial_profile === 'mayorista'
 
@@ -476,13 +478,26 @@ export default function CuentaPage() {
           </div>
         )}
 
-        <div className="bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 rounded-[2rem] border-2 border-dashed border-brand-teal/30 p-6 md:p-8 text-center">
-          <div className="text-4xl mb-3">📦</div>
-          <h3 className="font-display text-xl font-black text-brand-wood mb-2">Solicitar resurtido (próximamente)</h3>
-          <p className="text-sm text-brand-wood-soft">Pronto podrás pedir productos directo desde aquí y recibir una notificación cuando lo preparemos.</p>
-        </div>
+        {isMayorista && cliente && (
+          <div className="bg-gradient-to-br from-brand-teal/10 to-brand-cream rounded-[2rem] border-2 border-brand-teal/20 p-6 md:p-8 text-center">
+            <div className="text-4xl mb-3">📦</div>
+            <h3 className="font-display text-xl font-black text-brand-wood mb-2">Solicitar resurtido</h3>
+            <p className="text-sm text-brand-wood-soft mb-4">Pide productos directo desde aquí. Confirmaremos disponibilidad y te avisaremos.</p>
+            <button onClick={() => setResurtidoOpen(true)} className="btn-primary">Nuevo pedido</button>
+          </div>
+        )}
 
       </div>
+
+      {isMayorista && cliente && session?.user?.id && (
+        <ResurtidoModal
+          open={resurtidoOpen}
+          onClose={() => setResurtidoOpen(false)}
+          onCreated={fetchAll}
+          cliente={cliente}
+          userId={session.user.id}
+        />
+      )}
     </div>
   )
 }
