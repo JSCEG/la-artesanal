@@ -310,6 +310,11 @@ export default function EntregasPage() {
                         {entrega.notas}
                       </p>
                     )}
+                    {entrega.foto_url && (
+                      <a href={entrega.foto_url} target="_blank" rel="noreferrer" className="block border-t border-brand-wood/10 pt-2">
+                        <img src={entrega.foto_url} alt="Foto entrega" className="w-full max-h-56 object-cover rounded-xl border border-brand-wood/10" />
+                      </a>
+                    )}
                   </div>
                 )}
               </div>

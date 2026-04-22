@@ -431,6 +431,11 @@ export default function CuentaPage() {
                           {total > 0 && <span className="text-brand-wood font-black">· {fmt(total)}</span>}
                         </div>
                         {e.notas && <p className="text-xs text-brand-wood-soft italic mt-2">{e.notas}</p>}
+                        {e.foto_url && (
+                          <a href={e.foto_url} target="_blank" rel="noreferrer" className="block mt-3">
+                            <img src={e.foto_url} alt="Foto entrega" className="w-full max-h-48 object-cover rounded-xl border border-brand-wood/10" />
+                          </a>
+                        )}
                       </div>
                     )
                   })}

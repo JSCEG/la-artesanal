@@ -5,6 +5,7 @@ import {
   createCobro,
   getPedidosPendientesEntrega,
   calcularTotal,
+  uploadEntregaFoto,
 } from '../../services/pedidos'
 import type { Pedido, EstatusEntrega, EntregaFormData, MetodoCobro } from '../../services/pedidos'
 
@@ -87,6 +88,11 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Foto confirmación
+  const [fotoFile, setFotoFile] = useState<File | null>(null)
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null)
+  const [uploadingFoto, setUploadingFoto] = useState(false)
+
   // Cargar pedidos pendientes
   useEffect(() => {
     getPedidosPendientesEntrega().then(data => {
@@ -146,6 +152,19 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
     setSaving(true)
     setError('')
 
+    // 0. Subir foto (opcional)
+    let fotoUrl: string | null = null
+    if (fotoFile) {
+      setUploadingFoto(true)
+      fotoUrl = await uploadEntregaFoto(fotoFile)
+      setUploadingFoto(false)
+      if (!fotoUrl) {
+        setSaving(false)
+        setError('No se pudo subir la foto. Intenta de nuevo.')
+        return
+      }
+    }
+
     // 1. Crear entrega
     const form: EntregaFormData = {
       pedido_id: pedidoId,
@@ -153,6 +172,7 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
       entregado_por: entregadoPor,
       notas,
       estatus,
+      foto_url: fotoUrl,
       detalle: detalle
         .filter(d => d.cantidad > 0)
         .map(d => ({ producto_id: d.producto_id, cantidad: d.cantidad, precio_unit: d.precio_unit })),
@@ -372,6 +392,38 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
               <textarea value={notas} onChange={e => setNotas(e.target.value)}
                 rows={2} placeholder="Observaciones de la entrega..."
                 className="input resize-none" />
+            </div>
+
+            {/* Foto confirmación (opcional) */}
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Foto confirmación (opcional)</label>
+              {fotoPreview ? (
+                <div className="relative rounded-xl overflow-hidden border-2 border-brand-teal/30">
+                  <img src={fotoPreview} alt="preview" className="w-full max-h-60 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => { setFotoFile(null); setFotoPreview(null) }}
+                    className="absolute top-2 right-2 bg-white/90 hover:bg-white text-brand-berry rounded-full w-8 h-8 flex items-center justify-center font-black shadow-md"
+                  >×</button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 border-2 border-dashed border-brand-wood/20 rounded-xl px-4 py-6 cursor-pointer hover:border-brand-teal/40 hover:bg-brand-teal/5 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-brand-wood-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                  <span className="text-xs font-bold text-brand-wood-soft">Tomar / subir foto</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (!f) return
+                      setFotoFile(f)
+                      setFotoPreview(URL.createObjectURL(f))
+                    }}
+                  />
+                </label>
+              )}
             </div>
 
             {/* ── Cobro al entregar ─────────────────────────────── */}

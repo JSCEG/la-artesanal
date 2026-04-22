@@ -58,6 +58,7 @@ export interface Entrega {
   fecha_entrega: string
   entregado_por: string | null
   notas: string | null
+  foto_url: string | null
   created_at: string
   // joined
   pedido?: {
@@ -74,6 +75,7 @@ export interface EntregaFormData {
   entregado_por: string
   notas: string
   estatus: EstatusEntrega
+  foto_url?: string | null
   detalle: { producto_id: number; cantidad: number; precio_unit: number }[]
 }
 
@@ -262,6 +264,17 @@ export async function getPedidosPendientesEntrega(): Promise<Pedido[]> {
   return data ?? []
 }
 
+export async function uploadEntregaFoto(file: File): Promise<string | null> {
+  const ext = file.name.split('.').pop() ?? 'jpg'
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+  const { error } = await supabase.storage
+    .from('entregas-fotos')
+    .upload(path, file, { upsert: false, contentType: file.type })
+  if (error) return null
+  const { data } = supabase.storage.from('entregas-fotos').getPublicUrl(path)
+  return data.publicUrl
+}
+
 export async function createEntrega(form: EntregaFormData, createdBy: string) {
   const { data: entrega, error } = await supabase
     .from('entregas')
@@ -271,6 +284,7 @@ export async function createEntrega(form: EntregaFormData, createdBy: string) {
       fecha_entrega: form.fecha_entrega,
       entregado_por: form.entregado_por || null,
       notas: form.notas || null,
+      foto_url: form.foto_url ?? null,
       created_by: createdBy,
     })
     .select()
