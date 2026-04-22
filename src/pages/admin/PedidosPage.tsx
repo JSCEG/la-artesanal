@@ -129,7 +129,9 @@ export default function PedidosPage() {
           <button
             onClick={() => {
               const rows = filtrados.flatMap(p => {
-                const total = calcularTotal(p.detalle ?? [])
+                const sub = calcularTotal(p.detalle ?? [])
+                const desc = Number(p.descuento_monto ?? 0)
+                const total = Math.max(0, sub - desc)
                 const nProd = (p.detalle ?? []).reduce((s, d) => s + d.cantidad, 0)
                 return [[
                   p.id.slice(0, 8), p.estatus, p.fecha_pedido,
@@ -137,11 +139,11 @@ export default function PedidosPage() {
                   p.cliente?.nombre_comercial ?? '',
                   p.cliente?.tipo ?? '',
                   p.sucursal?.nombre_sucursal ?? '',
-                  nProd, total, (p.notas ?? '').replace(/\n/g, ' '),
+                  nProd, sub, desc, total, (p.notas ?? '').replace(/\n/g, ' '),
                 ]]
               })
               const csv = toCSV(
-                ['ID', 'Estatus', 'Fecha pedido', 'Fecha entrega', 'Cliente', 'Tipo', 'Sucursal', 'N productos', 'Total', 'Notas'],
+                ['ID', 'Estatus', 'Fecha pedido', 'Fecha entrega', 'Cliente', 'Tipo', 'Sucursal', 'N productos', 'Subtotal', 'Descuento', 'Total', 'Notas'],
                 rows,
               )
               downloadCSV(`pedidos-${fechaStamp()}.csv`, csv)
@@ -218,7 +220,9 @@ export default function PedidosPage() {
         <div className="space-y-2">
           {filtrados.map(pedido => {
             const cfg = ESTATUS_CFG[pedido.estatus]
-            const total = calcularTotal(pedido.detalle ?? [])
+            const subtotal = calcularTotal(pedido.detalle ?? [])
+            const descuento = Number(pedido.descuento_monto ?? 0)
+            const total = Math.max(0, subtotal - descuento)
             const nProductos = pedido.detalle?.length ?? 0
             const isUpdating = updatingId === pedido.id
 
@@ -364,11 +368,25 @@ export default function PedidosPage() {
                       </div>
                     )}
 
-                    {/* Total */}
-                    {total > 0 && (
-                      <div className="flex justify-between items-center pt-2 border-t border-brand-wood/15">
-                        <span className="text-[10px] font-black text-brand-wood-soft uppercase tracking-widest">Total</span>
-                        <span className="font-display text-lg font-black text-brand-berry">{fmt(total)}</span>
+                    {/* Subtotal + descuento + total */}
+                    {subtotal > 0 && (
+                      <div className="pt-2 border-t border-brand-wood/15 space-y-1">
+                        {descuento > 0 && (
+                          <>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] font-black text-brand-wood-soft uppercase tracking-widest">Subtotal</span>
+                              <span className="text-sm font-bold text-brand-wood-soft">{fmt(subtotal)}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] font-black text-brand-teal uppercase tracking-widest">Descuento</span>
+                              <span className="text-sm font-black text-brand-teal">−{fmt(descuento)}</span>
+                            </div>
+                          </>
+                        )}
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-brand-wood-soft uppercase tracking-widest">Total</span>
+                          <span className="font-display text-lg font-black text-brand-berry">{fmt(total)}</span>
+                        </div>
                       </div>
                     )}
 

@@ -326,14 +326,15 @@ export async function getSaldoCliente(clienteId: string): Promise<{
 }> {
   // Total en pedidos entregados o confirmados (no cancelados, no borrador)
   const { data: pedidosData } = await supabase
-    .from('pedido_detalle')
-    .select('cantidad, precio_unit, pedido:pedidos!inner(cliente_id, estatus)')
-    .eq('pedido.cliente_id', clienteId)
-    .in('pedido.estatus', ['confirmado', 'en_ruta', 'entregado'])
+    .from('pedidos')
+    .select('id, descuento_monto, detalle:pedido_detalle(cantidad, precio_unit)')
+    .eq('cliente_id', clienteId)
+    .in('estatus', ['confirmado', 'en_ruta', 'entregado'])
 
-  const total_pedidos = (pedidosData ?? []).reduce(
-    (sum: number, d: any) => sum + d.cantidad * d.precio_unit, 0
-  )
+  const total_pedidos = (pedidosData ?? []).reduce((sum: number, p: any) => {
+    const sub = (p.detalle ?? []).reduce((s: number, d: any) => s + d.cantidad * d.precio_unit, 0)
+    return sum + Math.max(0, sub - Number(p.descuento_monto ?? 0))
+  }, 0)
 
   // Total cobrado
   const { data: cobrosData } = await supabase

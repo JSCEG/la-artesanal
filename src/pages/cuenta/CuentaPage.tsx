@@ -119,7 +119,7 @@ export default function CuentaPage() {
     if (!isMayorista) return null
     const totalPedidos = pedidos
       .filter(p => ['confirmado', 'en_ruta', 'entregado'].includes(p.estatus))
-      .reduce((s, p) => s + calcularTotal(p.detalle ?? []), 0)
+      .reduce((s, p) => s + Math.max(0, calcularTotal(p.detalle ?? []) - Number(p.descuento_monto ?? 0)), 0)
     const totalCobrado = cobros.reduce((s, c) => s + Number(c.monto), 0)
     return {
       total_pedidos: totalPedidos,
@@ -317,7 +317,9 @@ export default function CuentaPage() {
                 <div className="space-y-2">
                   {pedidosFiltrados.map(pedido => {
                     const cfg = ESTATUS_CFG[pedido.estatus]
-                    const total = calcularTotal(pedido.detalle ?? [])
+                    const subtotalP = calcularTotal(pedido.detalle ?? [])
+                    const descuentoP = Number(pedido.descuento_monto ?? 0)
+                    const total = Math.max(0, subtotalP - descuentoP)
                     const nProd = pedido.detalle?.length ?? 0
                     const isExpanded = expandedId === pedido.id
 
@@ -382,6 +384,19 @@ export default function CuentaPage() {
                                     <p className="text-sm font-black text-brand-wood">{fmt(d.cantidad * d.precio_unit)}</p>
                                   </div>
                                 ))}
+                                {descuentoP > 0 && (
+                                  <div className="pt-2 border-t border-brand-wood/10 space-y-1">
+                                    <div className="flex justify-between text-xs text-brand-wood-soft">
+                                      <span>Subtotal</span><span>{fmt(subtotalP)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-brand-teal font-black">
+                                      <span>Descuento</span><span>−{fmt(descuentoP)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm font-black text-brand-wood pt-1 border-t border-brand-wood/10">
+                                      <span>Total</span><span>{fmt(total)}</span>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
