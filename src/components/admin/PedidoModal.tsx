@@ -97,7 +97,8 @@ export default function PedidoModal({ onClose, onSaved }: Props) {
 
   // Cliente y sus sucursales
   const clienteSeleccionado = clientes.find(c => c.id === clienteId)
-  const sucursales: Sucursal[] = clienteSeleccionado?.sucursales ?? []
+  const sucursales: Sucursal[] = [...(clienteSeleccionado?.sucursales ?? [])]
+    .sort((a, b) => (b.es_matriz ? 1 : 0) - (a.es_matriz ? 1 : 0))
 
   // Precio sugerido según tipo de cliente
   function precioSugerido(p: Producto): number {
@@ -239,7 +240,13 @@ export default function PedidoModal({ onClose, onSaved }: Props) {
                   <label className="block text-[10px] font-black uppercase tracking-widest text-brand-wood/70 mb-1.5">Cliente *</label>
                   <select
                     value={clienteId}
-                    onChange={e => { setClienteId(e.target.value); setSucursalId('') }}
+                    onChange={e => {
+                      const cid = e.target.value
+                      setClienteId(cid)
+                      const c = clientes.find(x => x.id === cid)
+                      const matriz = c?.sucursales?.find(s => s.es_matriz && s.estatus === 'activo')
+                      setSucursalId(matriz?.id ?? '')
+                    }}
                     className="input"
                     required
                   >
@@ -269,7 +276,9 @@ export default function PedidoModal({ onClose, onSaved }: Props) {
                   >
                     <option value="">— Sin especificar —</option>
                     {sucursales.map(s => (
-                      <option key={s.id} value={s.id}>{s.nombre_sucursal}</option>
+                      <option key={s.id} value={s.id}>
+                        {s.es_matriz ? '★ ' : ''}{s.nombre_sucursal}{s.es_matriz ? ' (Matriz)' : ''}
+                      </option>
                     ))}
                   </select>
                 </div>

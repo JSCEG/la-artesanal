@@ -15,7 +15,7 @@ interface Props {
 const EMPTY: SucursalFormData = {
   nombre_sucursal: '', direccion: '', latitud: null, longitud: null,
   responsable: '', telefono: '', tipo_negocio: '', dias_visita: '',
-  capacidad_refri: null, estatus: 'activo', notas: '',
+  capacidad_refri: null, estatus: 'activo', notas: '', es_matriz: false,
 }
 
 // Centro entre Huasca de Ocampo y CDMX
@@ -122,6 +122,7 @@ export default function SucursalModal({ clienteId, clienteNombre, sucursal, onCl
       capacidad_refri: sucursal.capacidad_refri,
       estatus:         sucursal.estatus,
       notas:           sucursal.notas ?? '',
+      es_matriz:       !!sucursal.es_matriz,
     } : EMPTY
     setForm(data)
     setError('')
@@ -208,6 +209,20 @@ export default function SucursalModal({ clienteId, clienteNombre, sucursal, onCl
               <input value={form.nombre_sucursal} onChange={e => set('nombre_sucursal', e.target.value)}
                 className="input w-full" placeholder="Ej: Sucursal Centro" required />
             </div>
+
+            {/* Matriz toggle */}
+            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 border-brand-wood/10 hover:border-brand-teal/40 transition-colors">
+              <input
+                type="checkbox"
+                checked={form.es_matriz}
+                onChange={e => set('es_matriz', e.target.checked)}
+                className="w-5 h-5"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-black text-brand-wood">Matriz</p>
+                <p className="text-[10px] text-brand-wood-soft">Sucursal principal (se selecciona por defecto al crear pedidos)</p>
+              </div>
+            </label>
 
             {/* Tipo de negocio + Estatus chips */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

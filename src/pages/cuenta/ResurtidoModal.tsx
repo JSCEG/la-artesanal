@@ -34,7 +34,9 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
   const [promo, setPromo] = useState<ValidacionPromo | null>(null)
   const [validando, setValidando] = useState(false)
 
-  const sucursales: Sucursal[] = (cliente.sucursales ?? []).filter(s => s.estatus === 'activo')
+  const sucursales: Sucursal[] = (cliente.sucursales ?? [])
+    .filter(s => s.estatus === 'activo')
+    .sort((a, b) => (b.es_matriz ? 1 : 0) - (a.es_matriz ? 1 : 0))
 
   useEffect(() => {
     if (!open) return
@@ -44,7 +46,10 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
       setProductos(data)
       setLoading(false)
     })()
-    if (sucursales.length && !sucursalId) setSucursalId(sucursales[0].id)
+    if (sucursales.length && !sucursalId) {
+      const matriz = sucursales.find(s => s.es_matriz)
+      setSucursalId((matriz ?? sucursales[0]).id)
+    }
     // fecha entrega default: +2 días
     if (!fechaEntrega) {
       const d = new Date()
@@ -142,7 +147,11 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
           <div>
             <label className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Sucursal</label>
             <select value={sucursalId} onChange={e => setSucursalId(e.target.value)} className="input w-full mt-1">
-              {sucursales.map(s => <option key={s.id} value={s.id}>{s.nombre_sucursal}</option>)}
+              {sucursales.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.es_matriz ? '★ ' : ''}{s.nombre_sucursal}{s.es_matriz ? ' (Matriz)' : ''}
+                </option>
+              ))}
             </select>
           </div>
           <div>

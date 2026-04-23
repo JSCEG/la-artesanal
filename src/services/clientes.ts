@@ -34,6 +34,7 @@ export interface Sucursal {
   capacidad_refri: number | null
   estatus: EstatusSucursal
   notas: string | null
+  es_matriz: boolean
   created_at: string
   cliente?: { nombre_comercial: string; tipo: TipoCliente }
 }
@@ -64,6 +65,7 @@ export interface SucursalFormData {
   capacidad_refri: number | null
   estatus: EstatusSucursal
   notas: string
+  es_matriz: boolean
 }
 
 export async function getClientes(): Promise<Cliente[]> {
@@ -90,6 +92,12 @@ export async function upsertCliente(data: ClienteFormData, id?: string) {
 
 export async function upsertSucursal(data: SucursalFormData, clienteId: string, id?: string) {
   const payload = { ...data, cliente_id: clienteId }
+  if (data.es_matriz) {
+    // Unset existing matriz for this cliente (unique partial index)
+    let q = supabase.from('sucursales_clientes').update({ es_matriz: false }).eq('cliente_id', clienteId).eq('es_matriz', true)
+    if (id) q = q.neq('id', id)
+    await q
+  }
   if (id) return supabase.from('sucursales_clientes').update(payload).eq('id', id).select().single()
   return supabase.from('sucursales_clientes').insert(payload).select().single()
 }
