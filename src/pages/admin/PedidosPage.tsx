@@ -390,6 +390,19 @@ export default function PedidosPage() {
                       </div>
                     )}
 
+                    {/* Acciones detalle */}
+                    <div className="flex justify-end">
+                      <a
+                        href={`/ticket/${pedido.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-black uppercase tracking-widest text-brand-teal hover:text-brand-berry px-3 py-1.5 rounded-lg border-2 border-brand-teal/30 hover:border-brand-berry/40 inline-flex items-center gap-1.5"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                        Imprimir / PDF
+                      </a>
+                    </div>
+
                     {/* Timeline */}
                     <PedidoTimeline pedidoId={pedido.id} />
 

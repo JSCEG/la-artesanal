@@ -14,6 +14,7 @@ import EntregasPage from './pages/admin/EntregasPage'
 import CobrosPage from './pages/admin/CobrosPage'
 import InventarioPage from './pages/admin/InventarioPage'
 import PromocionesPage from './pages/admin/PromocionesPage'
+import TicketPedidoPage from './pages/TicketPedidoPage'
 
 function LoadingScreen() {
   return (
@@ -58,6 +59,9 @@ export default function App() {
         {/* ── Cliente registrado ── */}
         <Route path="/cuenta" element={
           <ProtectedRoute><CuentaPage /></ProtectedRoute>
+        } />
+        <Route path="/ticket/:id" element={
+          <ProtectedRoute><TicketPedidoPage /></ProtectedRoute>
         } />
 
         {/* ── Admin / Operador ── */}

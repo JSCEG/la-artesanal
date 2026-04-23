@@ -385,6 +385,16 @@ export default function CuentaPage() {
 
                         {isExpanded && (
                           <div className="border-t border-brand-wood/5 bg-brand-cream/20 px-4 py-3 space-y-3">
+                            <div className="flex justify-end">
+                              <a
+                                href={`/ticket/${pedido.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] font-black uppercase tracking-widest text-brand-teal hover:text-brand-berry px-3 py-1.5 rounded-lg border-2 border-brand-teal/30 hover:border-brand-berry/40 inline-flex items-center gap-1.5"
+                              >
+                                Imprimir / PDF
+                              </a>
+                            </div>
                             {pedido.notas && (
                               <p className="text-xs text-brand-wood-soft italic">{pedido.notas}</p>
                             )}
