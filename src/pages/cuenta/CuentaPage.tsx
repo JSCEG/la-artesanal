@@ -74,10 +74,10 @@ export default function CuentaPage() {
     setLoading(true)
     try {
       const [cli, peds, ents, cobs] = await Promise.all([
-        isMayorista ? getMiCliente(session.user.email) : Promise.resolve(null),
+        getMiCliente(session.user.email),
         getPedidos(),
-        isMayorista ? getEntregas() : Promise.resolve([]),
-        isMayorista ? getCobros() : Promise.resolve([]),
+        getEntregas(),
+        getCobros(),
       ])
       setCliente(cli)
       setPedidos(peds)
@@ -136,7 +136,7 @@ export default function CuentaPage() {
       active = false
       supabase.removeChannel(channel)
     }
-  }, [session?.user?.id, isMayorista])
+  }, [session?.user?.id])
 
   const handleSignOut = async () => {
     await signOut()
@@ -145,7 +145,7 @@ export default function CuentaPage() {
 
   // ─── Saldo (solo mayorista con cliente vinculado) ─────────────────────────
   const saldo = useMemo(() => {
-    if (!isMayorista) return null
+    if (!cliente) return null
     const totalPedidos = pedidos
       .filter(p => ['confirmado', 'en_ruta', 'entregado'].includes(p.estatus))
       .reduce((s, p) => s + Math.max(0, calcularTotal(p.detalle ?? []) - Number(p.descuento_monto ?? 0)), 0)
@@ -156,7 +156,7 @@ export default function CuentaPage() {
       saldo: totalPedidos - totalCobrado,
       limite: cliente?.limite_credito ?? 0,
     }
-  }, [isMayorista, pedidos, cobros, cliente])
+  }, [pedidos, cobros, cliente])
 
   const metricas = useMemo(() => ({
     totalCount: pedidos.length,
@@ -221,8 +221,8 @@ export default function CuentaPage() {
           </div>
         </div>
 
-        {/* Saldo mayorista */}
-        {isMayorista && saldo && cliente && (
+        {/* Saldo cliente */}
+        {saldo && cliente && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
               <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Total facturado</p>
@@ -264,8 +264,8 @@ export default function CuentaPage() {
           </div>
         </div>
 
-        {/* Tabs mayorista / solo pedidos minorista */}
-        {isMayorista && (
+        {/* Tabs */}
+        {cliente && (
           <div className="flex items-center gap-1 bg-white border border-brand-wood/10 rounded-2xl p-1 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
             {(['pedidos','entregas','pagos'] as Tab[]).map(t => (
               <button
@@ -284,7 +284,7 @@ export default function CuentaPage() {
         )}
 
         {/* Contenido según tab */}
-        {(tab === 'pedidos' || !isMayorista) && (
+        {(tab === 'pedidos' || !cliente) && (
           <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
             <div className="p-5 md:p-6 border-b border-brand-wood/5">
               <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis pedidos</h2>
@@ -450,7 +450,7 @@ export default function CuentaPage() {
         )}
 
         {/* Tab Entregas */}
-        {isMayorista && tab === 'entregas' && (
+        {cliente && tab === 'entregas' && (
           <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
             <div className="p-5 md:p-6 border-b border-brand-wood/5">
               <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis entregas</h2>
@@ -500,7 +500,7 @@ export default function CuentaPage() {
         )}
 
         {/* Tab Pagos */}
-        {isMayorista && tab === 'pagos' && (
+        {cliente && tab === 'pagos' && (
           <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
             <div className="p-5 md:p-6 border-b border-brand-wood/5">
               <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis pagos</h2>
@@ -537,7 +537,7 @@ export default function CuentaPage() {
           </div>
         )}
 
-        {isMayorista && cliente && (
+        {cliente && (
           <div className="bg-gradient-to-br from-brand-teal/10 to-brand-cream rounded-[2rem] border-2 border-brand-teal/20 p-6 md:p-8 text-center">
             <div className="text-4xl mb-3">📦</div>
             <h3 className="font-display text-xl font-black text-brand-wood mb-2">Solicitar resurtido</h3>
@@ -548,7 +548,7 @@ export default function CuentaPage() {
 
       </div>
 
-      {isMayorista && cliente && session?.user?.id && (
+      {cliente && session?.user?.id && (
         <ResurtidoModal
           open={resurtidoOpen}
           onClose={() => setResurtidoOpen(false)}

@@ -42,7 +42,7 @@ export default function ResurtidoModal({ open, onClose, onCreated, cliente, user
     if (!open) return
     ;(async () => {
       setLoading(true)
-      const data = await getCatalogoPorLista('mayorista')
+      const data = await getCatalogoPorLista(cliente.tipo === 'mayorista' ? 'mayorista' : 'minorista')
       setProductos(data)
       setLoading(false)
     })()
