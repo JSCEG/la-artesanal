@@ -96,9 +96,38 @@ export default function CuentaPage() {
 
     if (!session?.user) return () => { active = false }
 
+    const ESTATUS_LABEL: Record<string, string> = {
+      borrador: 'Borrador',
+      confirmado: 'Confirmado',
+      en_ruta: 'En ruta',
+      entregado: 'Entregado',
+      cancelado: 'Cancelado',
+    }
+
     const channel = supabase
       .channel(`cuenta-${session.user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => { if (active) fetchAll() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, (payload: any) => {
+        if (!active) return
+        if (payload.eventType === 'UPDATE' && payload.old?.estatus !== payload.new?.estatus) {
+          const nuevo = ESTATUS_LABEL[payload.new?.estatus] ?? payload.new?.estatus
+          if (payload.new?.estatus === 'confirmado') toast.success(`✓ Tu pedido fue confirmado`)
+          else if (payload.new?.estatus === 'en_ruta') toast.success(`🚚 Tu pedido va en camino`)
+          else if (payload.new?.estatus === 'entregado') toast.success(`🎉 Pedido entregado`)
+          else if (payload.new?.estatus === 'cancelado') toast.error(`Pedido cancelado`)
+          else toast.success(`Estatus: ${nuevo}`)
+        }
+        fetchAll()
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entregas' }, () => {
+        if (!active) return
+        toast.success('Se registró una entrega')
+        fetchAll()
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cobros' }, () => {
+        if (!active) return
+        toast.success('Se registró un pago a tu cuenta')
+        fetchAll()
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'entregas' }, () => { if (active) fetchAll() })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cobros' }, () => { if (active) fetchAll() })
       .subscribe()
