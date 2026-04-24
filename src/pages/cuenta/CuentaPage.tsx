@@ -176,9 +176,14 @@ export default function CuentaPage() {
   const hayFiltro = filtroEstatus !== 'todos' || busqueda.trim() !== ''
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen"
+         style={{
+           backgroundImage: 'radial-gradient(circle, rgba(177,48,107,0.08) 1.2px, transparent 1.2px)',
+           backgroundSize: '22px 22px',
+           backgroundColor: '#fdfbf7',
+         }}>
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-6">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -223,44 +228,60 @@ export default function CuentaPage() {
 
         {/* Saldo cliente */}
         {saldo && cliente && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
-              <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Total facturado</p>
-              <p className="font-display text-2xl font-black text-brand-wood mt-1">{fmt(saldo.total_pedidos)}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(177,48,107,0.04)' }}>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-wood to-brand-wood-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Total facturado</p>
+              <p className="font-display text-2xl font-black text-brand-wood leading-none">{fmt(saldo.total_pedidos)}</p>
             </div>
-            <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
-              <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pagado</p>
-              <p className="font-display text-2xl font-black text-brand-teal mt-1">{fmt(saldo.total_cobrado)}</p>
+            <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(45,102,128,0.06)' }}>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-teal to-brand-teal-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Pagado</p>
+              <p className="font-display text-2xl font-black text-brand-teal leading-none">{fmt(saldo.total_cobrado)}</p>
             </div>
-            <div className={`rounded-2xl px-4 py-3 border-2 ${
-              saldo.saldo > 0
-                ? 'bg-gradient-to-br from-brand-coral/10 to-brand-cream border-brand-coral/30'
-                : 'bg-gradient-to-br from-brand-berry/10 to-brand-cream border-brand-berry/20'
-            }`}>
-              <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Saldo por pagar</p>
-              <p className={`font-display text-2xl font-black mt-1 ${saldo.saldo > 0 ? 'text-brand-coral' : 'text-brand-berry'}`}>
-                {fmt(saldo.saldo)}
-              </p>
+            <div className="bg-white rounded-2xl p-5 border-2 border-brand-coral/20 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(225,119,81,0.08)' }}>
+              <div className={`w-11 h-11 rounded-2xl text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3 ${
+                saldo.saldo > 0
+                  ? 'bg-gradient-to-br from-brand-coral to-brand-berry-soft'
+                  : 'bg-gradient-to-br from-brand-berry to-brand-berry-soft'
+              }`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              </div>
+              <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Saldo por pagar</p>
+              <p className={`font-display text-2xl font-black leading-none ${saldo.saldo > 0 ? 'text-brand-coral' : 'text-brand-berry'}`}>{fmt(saldo.saldo)}</p>
               {saldo.limite > 0 && (
-                <p className="text-[10px] text-brand-wood-soft mt-0.5">Límite crédito: {fmt(saldo.limite)}</p>
+                <p className="text-[10px] text-brand-wood-soft font-medium mt-2">Límite crédito: {fmt(saldo.limite)}</p>
               )}
             </div>
           </div>
         )}
 
         {/* Métricas pedidos */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pedidos</p>
-            <p className="font-display text-2xl font-black text-brand-wood mt-1">{metricas.totalCount}</p>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(177,48,107,0.04)' }}>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-berry to-brand-berry-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/></svg>
+            </div>
+            <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Pedidos</p>
+            <p className="font-display text-2xl font-black text-brand-wood leading-none">{metricas.totalCount}</p>
           </div>
-          <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pendientes</p>
-            <p className="font-display text-2xl font-black text-brand-coral mt-1">{metricas.pendientesCount}</p>
+          <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(225,119,81,0.06)' }}>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-coral to-brand-berry-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Pendientes</p>
+            <p className="font-display text-2xl font-black text-brand-coral leading-none">{metricas.pendientesCount}</p>
           </div>
-          <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Entregados</p>
-            <p className="font-display text-2xl font-black text-brand-berry mt-1">{metricas.entregadosCount}</p>
+          <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(177,48,107,0.06)' }}>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-teal to-brand-wood-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+            </div>
+            <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Entregados</p>
+            <p className="font-display text-2xl font-black text-brand-berry leading-none">{metricas.entregadosCount}</p>
           </div>
         </div>
 

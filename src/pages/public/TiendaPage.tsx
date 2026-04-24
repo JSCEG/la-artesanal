@@ -42,7 +42,12 @@ export default function TiendaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen"
+         style={{
+           backgroundImage: 'radial-gradient(circle, rgba(177,48,107,0.08) 1.2px, transparent 1.2px)',
+           backgroundSize: '22px 22px',
+           backgroundColor: '#fdfbf7',
+         }}>
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
         <div className="flex items-start justify-between gap-3 flex-wrap mb-6">
