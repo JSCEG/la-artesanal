@@ -4,6 +4,7 @@ import AdminLayout from './components/admin/AdminLayout'
 import LandingPage from './pages/public/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegistroPage from './pages/public/RegistroPage'
+import TiendaPage from './pages/public/TiendaPage'
 import CuentaPage from './pages/cuenta/CuentaPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import CatalogoPage from './pages/admin/CatalogoPage'
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="/registro" element={
           session ? <Navigate to="/cuenta" replace /> : <RegistroPage />
         } />
+        <Route path="/tienda" element={<TiendaPage />} />
 
         {/* ── Cliente registrado ── */}
         <Route path="/cuenta" element={

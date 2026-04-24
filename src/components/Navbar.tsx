@@ -1,10 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useSession } from '../hooks/useSession'
+import { useCart } from '../context/CartContext'
 
 const LOGO_URL = 'https://pub-74e211e7329944698d66a7be2d5a8eca.r2.dev/la-artesanal/img/logo.png'
 
 export default function Navbar() {
   const { session, profile, signOut } = useSession()
+  const { count } = useCart()
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -36,6 +38,12 @@ export default function Navbar() {
 
         {/* Acciones auth */}
         <div className="flex gap-2 md:gap-3 shrink-0 items-center">
+          <Link to="/tienda" className="relative px-3 py-2 rounded-xl text-gray-600 font-semibold hover:bg-brand-berry/10 hover:text-brand-berry transition-colors text-sm">
+            🛒 <span className="hidden md:inline">Tienda</span>
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 bg-brand-berry text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center">{count}</span>
+            )}
+          </Link>
           {session ? (
             <>
               {isInternal ? (

@@ -4,12 +4,15 @@ import './index.css'
 import App from './App.tsx'
 import { SessionProvider } from './context/SessionContext'
 import { ToastProvider } from './context/ToastContext'
+import { CartProvider } from './context/CartContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SessionProvider>
       <ToastProvider>
-        <App />
+        <CartProvider>
+          <App />
+        </CartProvider>
       </ToastProvider>
     </SessionProvider>
   </StrictMode>,
