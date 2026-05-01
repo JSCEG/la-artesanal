@@ -3,7 +3,6 @@ import { getInsumos, type Insumo } from '../../services/insumos'
 import {
   getRecetaByProducto,
   upsertReceta,
-  calcularCostoReceta,
   type Receta,
   type RecetaItemInput,
 } from '../../services/recetas'

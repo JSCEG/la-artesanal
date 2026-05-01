@@ -91,7 +91,7 @@ export default function EntregaModal({ pedidoInicial, onClose, onSaved }: Props)
   // Foto confirmación
   const [fotoFile, setFotoFile] = useState<File | null>(null)
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
-  const [uploadingFoto, setUploadingFoto] = useState(false)
+  const [, setUploadingFoto] = useState(false)
 
   // Cargar pedidos pendientes
   useEffect(() => {

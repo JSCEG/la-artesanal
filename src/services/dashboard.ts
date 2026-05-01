@@ -245,7 +245,7 @@ export async function getAlertasOperativas(): Promise<AlertasOperativas> {
       unidad: i.unidad,
       stock_actual: i.stock_actual,
       stock_minimo: i.stock_minimo,
-      estado: i.stock_actual <= 0 ? 'agotado' : 'bajo',
+      estado: (i.stock_actual <= 0 ? 'agotado' : 'bajo') as 'agotado' | 'bajo',
     }))
     .sort((a, b) => (a.estado === b.estado ? 0 : a.estado === 'agotado' ? -1 : 1))
 
