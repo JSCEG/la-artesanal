@@ -2,17 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSession } from '../../hooks/useSession'
 import Navbar from '../../components/Navbar'
-import { getPedidos, getEntregas, getCobros, calcularTotal } from '../../services/pedidos'
-import type { Pedido, EstatusPedido, Entrega, Cobro, EstatusEntrega, MetodoCobro } from '../../services/pedidos'
-import { getMiCliente } from '../../services/clientes'
-import type { Cliente } from '../../services/clientes'
+import { getPedidos, calcularTotal } from '../../services/pedidos'
+import { getMiSaldo } from '../../services/portal'
+import type { Pedido, EstatusPedido } from '../../services/pedidos'
 import { supabase } from '../../services/supabase'
 import { CardSkeleton } from '../../components/admin/Skeleton'
 import EmptyState from '../../components/admin/EmptyState'
 import { useToast } from '../../context/ToastContext'
-import ResurtidoModal from './ResurtidoModal'
 
-// ─── Config visual ────────────────────────────────────────────────────────────
+// ─── Estatus visual ───────────────────────────────────────────────────────────
 
 const ESTATUS_CFG: Record<EstatusPedido, { label: string; badge: string }> = {
   borrador:   { label: 'Borrador',   badge: 'bg-brand-wood/5 text-brand-wood-soft border-brand-wood/15' },
@@ -22,31 +20,15 @@ const ESTATUS_CFG: Record<EstatusPedido, { label: string; badge: string }> = {
   cancelado:  { label: 'Cancelado',  badge: 'bg-gray-100 text-gray-500 border-gray-200'                 },
 }
 
-const ENTREGA_CFG: Record<EstatusEntrega, { label: string; badge: string }> = {
-  pendiente: { label: 'Pendiente', badge: 'bg-brand-wood/5 text-brand-wood-soft border-brand-wood/15' },
-  parcial:   { label: 'Parcial',   badge: 'bg-brand-coral/15 text-brand-coral border-brand-coral/30' },
-  completa:  { label: 'Completa',  badge: 'bg-brand-berry/10 text-brand-berry border-brand-berry/30' },
-  fallida:   { label: 'Fallida',   badge: 'bg-gray-100 text-gray-500 border-gray-200' },
-}
-
-const METODO_LABEL: Record<MetodoCobro, string> = {
-  efectivo: 'Efectivo',
-  transferencia: 'Transferencia',
-  tarjeta: 'Tarjeta',
-  stripe: 'Stripe',
-  paypal: 'PayPal',
-}
-
 function fmt(n: number) {
   return n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })
 }
 
 function fmtFecha(iso: string) {
-  const d = iso.includes('T') ? new Date(iso) : new Date(iso + 'T12:00:00')
-  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(iso + 'T12:00:00').toLocaleDateString('es-MX', {
+    day: '2-digit', month: 'short', year: 'numeric',
+  })
 }
-
-type Tab = 'pedidos' | 'entregas' | 'pagos'
 
 // ─── Página ───────────────────────────────────────────────────────────────────
 
@@ -54,82 +36,58 @@ export default function CuentaPage() {
   const { profile, session, signOut } = useSession()
   const navigate = useNavigate()
   const toast = useToast()
-
-  const [cliente, setCliente] = useState<Cliente | null>(null)
   const [pedidos, setPedidos] = useState<Pedido[]>([])
-  const [entregas, setEntregas] = useState<Entrega[]>([])
-  const [cobros, setCobros] = useState<Cobro[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const [tab, setTab] = useState<Tab>('pedidos')
+  const [loadingPedidos, setLoadingPedidos] = useState(true)
   const [filtroEstatus, setFiltroEstatus] = useState<EstatusPedido | 'todos'>('todos')
   const [busqueda, setBusqueda] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [resurtidoOpen, setResurtidoOpen] = useState(false)
+  const [saldoInfo, setSaldoInfo] = useState<{ total_pedidos: number; total_cobrado: number; saldo: number } | null>(null)
 
-  const isMayorista = profile?.commercial_profile === 'mayorista'
+  const esMayorista = profile?.commercial_profile === 'mayorista'
 
-  async function fetchAll() {
-    if (!session?.user?.email) return
-    setLoading(true)
+  async function fetchPedidos() {
+    if (!session?.user) {
+      setPedidos([])
+      setLoadingPedidos(false)
+      return
+    }
+    setLoadingPedidos(true)
     try {
-      const [cli, peds, ents, cobs] = await Promise.all([
-        getMiCliente(session.user.email),
-        getPedidos(),
-        getEntregas(),
-        getCobros(),
-      ])
-      setCliente(cli)
-      setPedidos(peds)
-      setEntregas(ents)
-      setCobros(cobs)
+      const data = await getPedidos()
+      setPedidos(data)
     } catch {
-      toast.error('No se pudieron cargar tus datos')
+      toast.error('No se pudieron cargar tus pedidos')
     } finally {
-      setLoading(false)
+      setLoadingPedidos(false)
+    }
+  }
+
+  async function fetchSaldo() {
+    if (!esMayorista) return
+    try {
+      const s = await getMiSaldo()
+      if (s) setSaldoInfo({ total_pedidos: s.total_pedidos, total_cobrado: s.total_cobrado, saldo: s.saldo })
+    } catch {
+      // silencioso
     }
   }
 
   useEffect(() => {
     let active = true
-    ;(async () => { await fetchAll() })()
+    ;(async () => {
+      await fetchPedidos()
+      await fetchSaldo()
+    })()
 
     if (!session?.user) return () => { active = false }
 
-    const ESTATUS_LABEL: Record<string, string> = {
-      borrador: 'Borrador',
-      confirmado: 'Confirmado',
-      en_ruta: 'En ruta',
-      entregado: 'Entregado',
-      cancelado: 'Cancelado',
-    }
-
     const channel = supabase
-      .channel(`cuenta-${session.user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, (payload: any) => {
-        if (!active) return
-        if (payload.eventType === 'UPDATE' && payload.old?.estatus !== payload.new?.estatus) {
-          const nuevo = ESTATUS_LABEL[payload.new?.estatus] ?? payload.new?.estatus
-          if (payload.new?.estatus === 'confirmado') toast.success(`✓ Tu pedido fue confirmado`)
-          else if (payload.new?.estatus === 'en_ruta') toast.success(`🚚 Tu pedido va en camino`)
-          else if (payload.new?.estatus === 'entregado') toast.success(`🎉 Pedido entregado`)
-          else if (payload.new?.estatus === 'cancelado') toast.error(`Pedido cancelado`)
-          else toast.success(`Estatus: ${nuevo}`)
-        }
-        fetchAll()
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entregas' }, () => {
-        if (!active) return
-        toast.success('Se registró una entrega')
-        fetchAll()
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cobros' }, () => {
-        if (!active) return
-        toast.success('Se registró un pago a tu cuenta')
-        fetchAll()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'entregas' }, () => { if (active) fetchAll() })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cobros' }, () => { if (active) fetchAll() })
+      .channel(`cuenta-pedidos-${session.user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pedidos', filter: `created_by=eq.${session.user.id}` },
+        () => { if (active) { fetchPedidos(); fetchSaldo() } }
+      )
       .subscribe()
 
     return () => {
@@ -143,28 +101,19 @@ export default function CuentaPage() {
     navigate('/')
   }
 
-  // ─── Saldo (solo mayorista con cliente vinculado) ─────────────────────────
-  const saldo = useMemo(() => {
-    if (!cliente) return null
-    const totalPedidos = pedidos
-      .filter(p => ['confirmado', 'en_ruta', 'entregado'].includes(p.estatus))
-      .reduce((s, p) => s + Math.max(0, calcularTotal(p.detalle ?? []) - Number(p.descuento_monto ?? 0)), 0)
-    const totalCobrado = cobros.reduce((s, c) => s + Number(c.monto), 0)
+  const metricas = useMemo(() => {
+    const pendientes = pedidos.filter(p => p.estatus === 'confirmado' || p.estatus === 'en_ruta')
+    const entregados = pedidos.filter(p => p.estatus === 'entregado')
+    const total = pedidos.reduce((s, p) => s + calcularTotal(p.detalle ?? []), 0)
     return {
-      total_pedidos: totalPedidos,
-      total_cobrado: totalCobrado,
-      saldo: totalPedidos - totalCobrado,
-      limite: cliente?.limite_credito ?? 0,
+      totalCount: pedidos.length,
+      pendientesCount: pendientes.length,
+      entregadosCount: entregados.length,
+      totalMonto: total,
     }
-  }, [pedidos, cobros, cliente])
+  }, [pedidos])
 
-  const metricas = useMemo(() => ({
-    totalCount: pedidos.length,
-    pendientesCount: pedidos.filter(p => p.estatus === 'confirmado' || p.estatus === 'en_ruta').length,
-    entregadosCount: pedidos.filter(p => p.estatus === 'entregado').length,
-  }), [pedidos])
-
-  const pedidosFiltrados = useMemo(() => pedidos.filter(p => {
+  const filtrados = useMemo(() => pedidos.filter(p => {
     const estatusOk = filtroEstatus === 'todos' || p.estatus === filtroEstatus
     const q = busqueda.trim().toLowerCase()
     if (!q) return estatusOk
@@ -176,16 +125,10 @@ export default function CuentaPage() {
   const hayFiltro = filtroEstatus !== 'todos' || busqueda.trim() !== ''
 
   return (
-    <div className="min-h-screen"
-         style={{
-           backgroundImage: 'radial-gradient(circle, rgba(177,48,107,0.08) 1.2px, transparent 1.2px)',
-           backgroundSize: '22px 22px',
-           backgroundColor: '#fdfbf7',
-         }}>
+    <div className="min-h-screen bg-brand-cream">
       <Navbar />
-      <div className="max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12 space-y-6">
 
-        {/* Header */}
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h1 className="font-display text-2xl md:text-3xl font-black text-brand-wood">Mi cuenta</h1>
@@ -199,11 +142,10 @@ export default function CuentaPage() {
           </div>
         </div>
 
-        {/* Perfil */}
         <div className="bg-white border border-brand-wood/10 rounded-2xl p-5 md:p-6 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
           <div className="flex items-center gap-4">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 font-black text-xl text-white ${
-              isMayorista
+              profile?.commercial_profile === 'mayorista'
                 ? 'bg-gradient-to-br from-brand-teal to-brand-teal-soft'
                 : 'bg-gradient-to-br from-brand-berry to-brand-berry-soft'
             }`}>
@@ -212,372 +154,208 @@ export default function CuentaPage() {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-black uppercase tracking-widest text-brand-wood-soft">Perfil comercial</p>
               <p className="font-bold text-brand-wood mt-1 truncate">
-                {isMayorista ? 'Mayorista' : 'Minorista'}
-                {cliente?.nombre_comercial && <> · {cliente.nombre_comercial}</>}
+                {profile?.commercial_profile === 'mayorista' ? 'Mayorista' : 'Minorista'}
               </p>
             </div>
             <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${
-              isMayorista
+              profile?.commercial_profile === 'mayorista'
                 ? 'bg-brand-teal/10 text-brand-teal border-brand-teal/30'
                 : 'bg-brand-berry/10 text-brand-berry border-brand-berry/30'
             }`}>
-              {isMayorista ? '🏪' : '🛒'}
+              {profile?.commercial_profile === 'mayorista' ? '🏪' : '🛒'}
             </span>
           </div>
         </div>
 
-        {/* Saldo cliente */}
-        {saldo && cliente && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(177,48,107,0.04)' }}>
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-wood to-brand-wood-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        {esMayorista && saldoInfo && (
+          <div className="bg-gradient-to-br from-brand-teal/10 to-brand-cream border-2 border-brand-teal/25 rounded-2xl p-5 md:p-6 shadow-[0_4px_20px_rgba(55,133,126,0.08)]">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-brand-teal">Cuenta mayorista</p>
+                <p className="font-display text-xl md:text-2xl font-black text-brand-wood mt-1">Estado de cuenta</p>
               </div>
-              <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Total facturado</p>
-              <p className="font-display text-2xl font-black text-brand-wood leading-none">{fmt(saldo.total_pedidos)}</p>
+              <Link to="/#catalogo" className="btn-primary !py-2 !px-4 text-sm">Nuevo pedido</Link>
             </div>
-            <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(45,102,128,0.06)' }}>
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-teal to-brand-teal-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pedidos</p>
+                <p className="font-display text-lg md:text-xl font-black text-brand-wood mt-1">{fmt(saldoInfo.total_pedidos)}</p>
               </div>
-              <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Pagado</p>
-              <p className="font-display text-2xl font-black text-brand-teal leading-none">{fmt(saldo.total_cobrado)}</p>
-            </div>
-            <div className="bg-white rounded-2xl p-5 border-2 border-brand-coral/20 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(225,119,81,0.08)' }}>
-              <div className={`w-11 h-11 rounded-2xl text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3 ${
-                saldo.saldo > 0
-                  ? 'bg-gradient-to-br from-brand-coral to-brand-berry-soft'
-                  : 'bg-gradient-to-br from-brand-berry to-brand-berry-soft'
-              }`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Cobrado</p>
+                <p className="font-display text-lg md:text-xl font-black text-brand-teal mt-1">{fmt(saldoInfo.total_cobrado)}</p>
               </div>
-              <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Saldo por pagar</p>
-              <p className={`font-display text-2xl font-black leading-none ${saldo.saldo > 0 ? 'text-brand-coral' : 'text-brand-berry'}`}>{fmt(saldo.saldo)}</p>
-              {saldo.limite > 0 && (
-                <p className="text-[10px] text-brand-wood-soft font-medium mt-2">Límite crédito: {fmt(saldo.limite)}</p>
-              )}
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Saldo</p>
+                <p className={`font-display text-lg md:text-xl font-black mt-1 ${saldoInfo.saldo > 0 ? 'text-brand-coral' : 'text-brand-wood'}`}>
+                  {fmt(saldoInfo.saldo)}
+                </p>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Métricas pedidos */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(177,48,107,0.04)' }}>
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-berry to-brand-berry-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/></svg>
-            </div>
-            <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Pedidos</p>
-            <p className="font-display text-2xl font-black text-brand-wood leading-none">{metricas.totalCount}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pedidos</p>
+            <p className="font-display text-2xl font-black text-brand-wood mt-1">{metricas.totalCount}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(225,119,81,0.06)' }}>
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-coral to-brand-berry-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Pendientes</p>
-            <p className="font-display text-2xl font-black text-brand-coral leading-none">{metricas.pendientesCount}</p>
+          <div className="bg-white border border-brand-wood/10 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Pendientes</p>
+            <p className="font-display text-2xl font-black text-brand-coral mt-1">{metricas.pendientesCount}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 border border-brand-wood/10 hover:-translate-y-1 hover:shadow-lg transition-all group" style={{ boxShadow: '0 4px 20px rgba(177,48,107,0.06)' }}>
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-teal to-brand-wood-soft text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
-            </div>
-            <p className="text-[11px] uppercase tracking-widest text-brand-wood/60 font-bold mb-1">Entregados</p>
-            <p className="font-display text-2xl font-black text-brand-berry leading-none">{metricas.entregadosCount}</p>
+          <div className="col-span-2 lg:col-span-1 bg-gradient-to-br from-brand-berry/10 to-brand-cream border-2 border-brand-berry/20 rounded-2xl px-4 py-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-wood-soft">Total</p>
+            <p className="font-display text-2xl font-black text-brand-berry mt-1">{fmt(metricas.totalMonto)}</p>
+            <p className="text-xs text-brand-wood-soft mt-0.5">{metricas.entregadosCount} entregados</p>
           </div>
         </div>
 
-        {/* Tabs */}
-        {cliente && (
-          <div className="flex items-center gap-1 bg-white border border-brand-wood/10 rounded-2xl p-1 shadow-[0_4px_20px_rgba(177,48,107,0.04)]">
-            {(['pedidos','entregas','pagos'] as Tab[]).map(t => (
+        <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
+          <div className="p-5 md:p-6 border-b border-brand-wood/5">
+            <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis pedidos</h2>
+            <p className="text-xs text-brand-wood-soft font-medium mt-1">Historial de tus compras</p>
+
+            <div className="flex items-center gap-2 flex-wrap mt-4">
               <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`flex-1 text-xs md:text-sm font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all ${
-                  tab === t ? 'bg-brand-wood text-white shadow-[2px_2px_0_rgba(91,56,34,0.25)]' : 'text-brand-wood-soft hover:text-brand-wood'
+                onClick={() => setFiltroEstatus('todos')}
+                className={`text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-full border transition-all ${
+                  filtroEstatus === 'todos'
+                    ? 'bg-brand-wood text-white border-brand-wood shadow-[2px_2px_0_rgba(91,56,34,0.25)]'
+                    : 'bg-white text-brand-wood border-brand-wood/15 hover:border-brand-wood/40'
                 }`}
               >
-                {t === 'pedidos' && `Pedidos (${pedidos.length})`}
-                {t === 'entregas' && `Entregas (${entregas.length})`}
-                {t === 'pagos' && `Pagos (${cobros.length})`}
+                Todos ({pedidos.length})
               </button>
-            ))}
-          </div>
-        )}
-
-        {/* Contenido según tab */}
-        {(tab === 'pedidos' || !cliente) && (
-          <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
-            <div className="p-5 md:p-6 border-b border-brand-wood/5">
-              <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis pedidos</h2>
-              <p className="text-xs text-brand-wood-soft font-medium mt-1">Historial de tus compras</p>
-
-              <div className="flex items-center gap-2 flex-wrap mt-4">
+              {(Object.entries(ESTATUS_CFG) as [EstatusPedido, typeof ESTATUS_CFG[EstatusPedido]][]).map(([key, cfg]) => (
                 <button
-                  onClick={() => setFiltroEstatus('todos')}
-                  className={`text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-full border transition-all ${
-                    filtroEstatus === 'todos'
-                      ? 'bg-brand-wood text-white border-brand-wood shadow-[2px_2px_0_rgba(91,56,34,0.25)]'
-                      : 'bg-white text-brand-wood border-brand-wood/15 hover:border-brand-wood/40'
+                  key={key}
+                  onClick={() => setFiltroEstatus(filtroEstatus === key ? 'todos' : key)}
+                  className={`text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-full border transition-all ${cfg.badge} ${
+                    filtroEstatus === key ? 'ring-2 ring-offset-1 ring-current' : 'opacity-80 hover:opacity-100'
                   }`}
                 >
-                  Todos ({pedidos.length})
+                  {cfg.label}
                 </button>
-                {(Object.entries(ESTATUS_CFG) as [EstatusPedido, typeof ESTATUS_CFG[EstatusPedido]][]).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => setFiltroEstatus(filtroEstatus === key ? 'todos' : key)}
-                    className={`text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-full border transition-all ${cfg.badge} ${
-                      filtroEstatus === key ? 'ring-2 ring-offset-1 ring-current' : 'opacity-80 hover:opacity-100'
-                    }`}
-                  >
-                    {cfg.label}
-                  </button>
-                ))}
+              ))}
+            </div>
+
+            <input
+              type="text"
+              placeholder="Buscar por sucursal, notas o folio…"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              className="input w-full mt-4"
+            />
+          </div>
+
+          <div className="p-4 md:p-5">
+            {loadingPedidos ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
               </div>
-
-              <input
-                type="text"
-                placeholder="Buscar por sucursal, notas o folio…"
-                value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
-                className="input w-full mt-4"
+            ) : filtrados.length === 0 ? (
+              <EmptyState
+                tone="berry"
+                icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 9 3 3-3 3"/><path d="M16 3v18"/></svg>}
+                title={hayFiltro ? 'Sin resultados' : 'Sin pedidos todavía'}
+                description={hayFiltro
+                  ? 'Probá cambiar el filtro o el término de búsqueda.'
+                  : 'Cuando hagas tu primer pedido aparecerá aquí con todos los detalles.'}
+                action={hayFiltro ? (
+                  <button onClick={() => { setFiltroEstatus('todos'); setBusqueda('') }} className="btn-secondary text-sm">Limpiar filtros</button>
+                ) : (
+                  <Link to="/#catalogo" className="btn-primary text-sm">Explorar catálogo</Link>
+                )}
               />
-            </div>
+            ) : (
+              <div className="space-y-2">
+                {filtrados.map(pedido => {
+                  const cfg = ESTATUS_CFG[pedido.estatus]
+                  const total = calcularTotal(pedido.detalle ?? [])
+                  const nProd = pedido.detalle?.length ?? 0
+                  const isExpanded = expandedId === pedido.id
 
-            <div className="p-4 md:p-5">
-              {loading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
-                </div>
-              ) : pedidosFiltrados.length === 0 ? (
-                <EmptyState
-                  tone="berry"
-                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 9 3 3-3 3"/><path d="M16 3v18"/></svg>}
-                  title={hayFiltro ? 'Sin resultados' : 'Sin pedidos todavía'}
-                  description={hayFiltro
-                    ? 'Probá cambiar el filtro o el término de búsqueda.'
-                    : 'Cuando hagas tu primer pedido aparecerá aquí con todos los detalles.'}
-                  action={hayFiltro ? (
-                    <button onClick={() => { setFiltroEstatus('todos'); setBusqueda('') }} className="btn-secondary text-sm">Limpiar filtros</button>
-                  ) : (
-                    <Link to="/#catalogo" className="btn-primary text-sm">Explorar catálogo</Link>
-                  )}
-                />
-              ) : (
-                <div className="space-y-2">
-                  {pedidosFiltrados.map(pedido => {
-                    const cfg = ESTATUS_CFG[pedido.estatus]
-                    const subtotalP = calcularTotal(pedido.detalle ?? [])
-                    const descuentoP = Number(pedido.descuento_monto ?? 0)
-                    const total = Math.max(0, subtotalP - descuentoP)
-                    const nProd = pedido.detalle?.length ?? 0
-                    const isExpanded = expandedId === pedido.id
+                  return (
+                    <div key={pedido.id} className="bg-white rounded-2xl border border-brand-wood/10 overflow-hidden">
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : pedido.id)}
+                        className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-brand-cream/30 transition-colors"
+                      >
+                        <span className="text-brand-wood-soft flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg"
+                               className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                               viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6"/>
+                          </svg>
+                        </span>
 
-                    return (
-                      <div key={pedido.id} className="bg-white rounded-2xl border border-brand-wood/10 overflow-hidden">
-                        <button
-                          onClick={() => setExpandedId(isExpanded ? null : pedido.id)}
-                          className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-brand-cream/30 transition-colors"
-                        >
-                          <span className="text-brand-wood-soft flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                          </span>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-bold text-brand-wood truncate">Pedido</p>
-                              <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border flex-shrink-0 ${cfg.badge}`}>
-                                {cfg.label}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-brand-wood-soft flex-wrap">
-                              <span>{fmtFecha(pedido.fecha_pedido)}</span>
-                              {pedido.sucursal?.nombre_sucursal && <span>· {pedido.sucursal.nombre_sucursal}</span>}
-                              {pedido.fecha_entrega_programada && <span>· Entrega {fmtFecha(pedido.fecha_entrega_programada)}</span>}
-                              <span>{nProd} {nProd === 1 ? 'producto' : 'productos'}</span>
-                              {total > 0 && <span className="text-brand-wood font-black">{fmt(total)}</span>}
-                            </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-brand-wood truncate">Pedido</p>
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border flex-shrink-0 ${cfg.badge}`}>
+                              {cfg.label}
+                            </span>
                           </div>
-                        </button>
-
-                        {isExpanded && (
-                          <div className="border-t border-brand-wood/5 bg-brand-cream/20 px-4 py-3 space-y-3">
-                            <div className="flex justify-end">
-                              <a
-                                href={`/ticket/${pedido.id}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[10px] font-black uppercase tracking-widest text-brand-teal hover:text-brand-berry px-3 py-1.5 rounded-lg border-2 border-brand-teal/30 hover:border-brand-berry/40 inline-flex items-center gap-1.5"
-                              >
-                                Imprimir / PDF
-                              </a>
-                            </div>
-                            {pedido.notas && (
-                              <p className="text-xs text-brand-wood-soft italic">{pedido.notas}</p>
-                            )}
-
-                            {(pedido.detalle?.length ?? 0) === 0 ? (
-                              <p className="text-xs text-brand-wood-soft italic">Sin detalle de productos</p>
-                            ) : (
-                              <div className="space-y-2">
-                                {pedido.detalle!.map(d => (
-                                  <div key={d.id} className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white border border-brand-wood/10 flex-shrink-0 overflow-hidden">
-                                      {d.producto?.photo_url ? (
-                                        <img src={d.producto.photo_url} alt={d.producto.name} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-brand-wood-soft">
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-bold text-brand-wood truncate">{d.producto?.name ?? `Producto #${d.producto_id}`}</p>
-                                      <p className="text-xs text-brand-wood-soft">
-                                        {d.cantidad} × {fmt(d.precio_unit)}
-                                      </p>
-                                    </div>
-                                    <p className="text-sm font-black text-brand-wood">{fmt(d.cantidad * d.precio_unit)}</p>
-                                  </div>
-                                ))}
-                                {descuentoP > 0 && (
-                                  <div className="pt-2 border-t border-brand-wood/10 space-y-1">
-                                    <div className="flex justify-between text-xs text-brand-wood-soft">
-                                      <span>Subtotal</span><span>{fmt(subtotalP)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-xs text-brand-teal font-black">
-                                      <span>Descuento</span><span>−{fmt(descuentoP)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm font-black text-brand-wood pt-1 border-t border-brand-wood/10">
-                                      <span>Total</span><span>{fmt(total)}</span>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                          <div className="flex items-center gap-3 mt-1 text-xs text-brand-wood-soft flex-wrap">
+                            <span>{fmtFecha(pedido.fecha_pedido)}</span>
+                            {pedido.sucursal?.nombre_sucursal && <span>· {pedido.sucursal.nombre_sucursal}</span>}
+                            {pedido.fecha_entrega_programada && <span>· Entrega {fmtFecha(pedido.fecha_entrega_programada)}</span>}
+                            <span>{nProd} {nProd === 1 ? 'producto' : 'productos'}</span>
+                            {total > 0 && <span className="text-brand-wood font-black">{fmt(total)}</span>}
                           </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                        </div>
+                      </button>
 
-        {/* Tab Entregas */}
-        {cliente && tab === 'entregas' && (
-          <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
-            <div className="p-5 md:p-6 border-b border-brand-wood/5">
-              <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis entregas</h2>
-              <p className="text-xs text-brand-wood-soft font-medium mt-1">Lo que hemos entregado en tu sucursal</p>
-            </div>
-            <div className="p-4 md:p-5">
-              {loading ? (
-                <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}</div>
-              ) : entregas.length === 0 ? (
-                <EmptyState
-                  tone="berry"
-                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3 2 8v10l10 5 10-5V8l-10-5Z"/><path d="m2 8 10 5 10-5"/><path d="M12 13v10"/></svg>}
-                  title="Sin entregas registradas"
-                  description="Cuando te entreguemos productos aparecerán aquí."
-                />
-              ) : (
-                <div className="space-y-2">
-                  {entregas.map(e => {
-                    const cfg = ENTREGA_CFG[e.estatus]
-                    const total = (e.detalle ?? []).reduce((s, d) => s + d.cantidad * d.precio_unit, 0)
-                    return (
-                      <div key={e.id} className="rounded-2xl border border-brand-wood/10 p-4">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-bold text-brand-wood">Entrega {fmtFecha(e.fecha_entrega)}</p>
-                          <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${cfg.badge}`}>
-                            {cfg.label}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-brand-wood-soft flex-wrap">
-                          {e.entregado_por && <span>por {e.entregado_por}</span>}
-                          <span>· {e.detalle?.length ?? 0} productos</span>
-                          {total > 0 && <span className="text-brand-wood font-black">· {fmt(total)}</span>}
-                        </div>
-                        {e.notas && <p className="text-xs text-brand-wood-soft italic mt-2">{e.notas}</p>}
-                        {e.foto_url && (
-                          <a href={e.foto_url} target="_blank" rel="noreferrer" className="block mt-3">
-                            <img src={e.foto_url} alt="Foto entrega" className="w-full max-h-48 object-cover rounded-xl border border-brand-wood/10" />
-                          </a>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                      {isExpanded && (
+                        <div className="border-t border-brand-wood/5 bg-brand-cream/20 px-4 py-3 space-y-3">
+                          {pedido.notas && (
+                            <p className="text-xs text-brand-wood-soft italic">{pedido.notas}</p>
+                          )}
 
-        {/* Tab Pagos */}
-        {cliente && tab === 'pagos' && (
-          <div className="bg-white rounded-2xl border border-brand-wood/10 shadow-[0_4px_20px_rgba(177,48,107,0.04)] overflow-hidden">
-            <div className="p-5 md:p-6 border-b border-brand-wood/5">
-              <h2 className="font-display text-xl md:text-2xl font-black text-brand-wood">Mis pagos</h2>
-              <p className="text-xs text-brand-wood-soft font-medium mt-1">Historial de cobros aplicados a tu cuenta</p>
-            </div>
-            <div className="p-4 md:p-5">
-              {loading ? (
-                <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}</div>
-              ) : cobros.length === 0 ? (
-                <EmptyState
-                  tone="berry"
-                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>}
-                  title="Sin pagos registrados"
-                  description="Aquí verás cada abono a tu cuenta."
-                />
-              ) : (
-                <div className="space-y-2">
-                  {cobros.map(c => (
-                    <div key={c.id} className="rounded-2xl border border-brand-wood/10 p-4 flex items-center gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-brand-wood">{METODO_LABEL[c.metodo]}</p>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-brand-wood-soft flex-wrap">
-                          <span>{fmtFecha(c.fecha_cobro)}</span>
-                          {c.referencia && <span>· Ref. {c.referencia}</span>}
+                          {(pedido.detalle?.length ?? 0) === 0 ? (
+                            <p className="text-xs text-brand-wood-soft italic">Sin detalle de productos</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {pedido.detalle!.map(d => (
+                                <div key={d.id} className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-xl bg-white border border-brand-wood/10 flex-shrink-0 overflow-hidden">
+                                    {d.producto?.photo_url ? (
+                                      <img src={d.producto.photo_url} alt={d.producto.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-brand-wood-soft">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-brand-wood truncate">{d.producto?.name ?? `Producto #${d.producto_id}`}</p>
+                                    <p className="text-xs text-brand-wood-soft">
+                                      {d.cantidad} × {fmt(d.precio_unit)}
+                                    </p>
+                                  </div>
+                                  <p className="text-sm font-black text-brand-wood">{fmt(d.cantidad * d.precio_unit)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {c.notas && <p className="text-xs text-brand-wood-soft italic mt-1">{c.notas}</p>}
-                      </div>
-                      <p className="font-display text-xl font-black text-brand-teal">{fmt(c.monto)}</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {cliente && (
-          <div className="bg-gradient-to-br from-brand-teal/10 to-brand-cream rounded-[2rem] border-2 border-brand-teal/20 p-6 md:p-8 text-center">
-            <div className="text-4xl mb-3">📦</div>
-            <h3 className="font-display text-xl font-black text-brand-wood mb-2">Solicitar resurtido</h3>
-            <p className="text-sm text-brand-wood-soft mb-4">Pide productos directo desde aquí. Confirmaremos disponibilidad y te avisaremos.</p>
-            <button onClick={() => setResurtidoOpen(true)} className="btn-primary">Nuevo pedido</button>
-          </div>
-        )}
+        <div className="bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 rounded-[2rem] border-2 border-dashed border-brand-teal/30 p-6 md:p-8 text-center">
+          <div className="text-4xl mb-3">🎉</div>
+          <h3 className="font-display text-xl font-black text-brand-wood mb-2">Promociones (próximamente)</h3>
+          <p className="text-sm text-brand-wood-soft">Aquí aparecerán tus promociones exclusivas y descuentos especiales.</p>
+        </div>
 
       </div>
-
-      {cliente && session?.user?.id && (
-        <ResurtidoModal
-          open={resurtidoOpen}
-          onClose={() => setResurtidoOpen(false)}
-          onCreated={fetchAll}
-          cliente={cliente}
-          userId={session.user.id}
-        />
-      )}
     </div>
   )
 }
